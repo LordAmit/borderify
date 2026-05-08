@@ -70,3 +70,10 @@ It is unlikely that it will
   - harm you in anyway
   
   unless Gemini decided to add those features without telling me. That is still unlikely since websites are sandboxed in a browser, usually. 
+
+
+## License
+
+This project is licensed under the **Creative Commons Attribution 4.0 International (CC BY 4.0)** License. 
+
+You are free to use and distribute this application, but any modifications, adaptations, or redistributions must provide clear attribution to the original creator (**Amit Seal Ami**). See the [LICENSE](LICENSE) file for the full legal text.
