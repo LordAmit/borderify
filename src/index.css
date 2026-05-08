@@ -162,6 +162,11 @@ textarea {
   color: var(--accent-color);
 }
 
+.brand-text {
+  display: flex;
+  flex-direction: column;
+}
+
 .brand-name {
   font-size: 18px;
   font-weight: 700;
@@ -169,6 +174,47 @@ textarea {
   background: linear-gradient(135deg, #fff 0%, #94a3b8 100%);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
+  line-height: 1.1;
+  margin-bottom: 1px;
+}
+
+.byline {
+  margin-left: 0;
+  font-size: 10.5px;
+  opacity: 0.55;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  transition: opacity 0.25s ease;
+  font-weight: 500;
+}
+
+.byline:hover {
+  opacity: 0.95;
+}
+
+.byline-dot {
+  color: var(--text-secondary);
+}
+
+.byline a {
+  color: var(--text-primary);
+  text-decoration: none;
+  transition: color 0.2s ease;
+  display: inline-flex;
+  align-items: center;
+}
+
+.byline a:hover {
+  color: var(--accent-color);
+  text-decoration: underline;
+}
+
+@media (max-width: 576px) {
+  .byline-dot,
+  .byline-link {
+    display: none !important;
+  }
 }
 
 .actions {

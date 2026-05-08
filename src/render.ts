@@ -54,7 +54,7 @@ export const renderPhotoBorder = (
     if (w && h) targetRatio = w / h;
   }
 
-  let baseLength = longestEdge * scaleLimit;
+  const baseLength = longestEdge * scaleLimit;
   let cWidth, cHeight;
   if (targetRatio > 1) { 
     cWidth = baseLength;
@@ -321,7 +321,7 @@ export const renderPhotoBorder = (
     if (anchor.align === 'right') startX -= totalW;
     else if (anchor.align === 'center') startX -= (totalW / 2);
 
-    let drawY = cardY + anchor.y + offsetY;
+    const drawY = cardY + anchor.y + offsetY;
 
     ctx.textAlign = 'left';
     ctx.textBaseline = 'middle';
@@ -367,7 +367,7 @@ export const renderPhotoBorder = (
     if (logoAnchor.align === 'right') startX -= logoW;
     else if (logoAnchor.align === 'center') startX -= (logoW / 2);
 
-    let drawY = cardY + logoAnchor.y + logoOffsetY;
+    const drawY = cardY + logoAnchor.y + logoOffsetY;
 
     ctx.drawImage(_logoImgObject, startX, drawY - (logoH / 2), logoW, logoH);
   }

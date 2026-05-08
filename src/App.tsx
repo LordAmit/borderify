@@ -91,7 +91,7 @@ function App() {
               } else {
                 resolve(null);
               }
-            } catch (err) {
+            } catch {
               resolve(null);
             }
           };
@@ -150,9 +150,10 @@ function App() {
         await processFiles(files);
       }
     };
-    
+
     window.addEventListener('paste', handlePaste);
     return () => window.removeEventListener('paste', handlePaste);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
 
@@ -315,8 +316,20 @@ function App() {
       <div className="workspace">
         <header className="top-bar">
           <div className="brand">
-            <img src="./favicon.svg" alt="Borderify Logo" className="logo-icon" style={{ width: 28, height: 28 }} />
-            <h1 className="brand-name">Borderify</h1>
+            <img src="./favicon.svg" alt="Borderify Logo" className="logo-icon" style={{ width: 32, height: 32 }} />
+            <div className="brand-text">
+              <h1 className="brand-name">Borderify</h1>
+              <span className="byline">
+                <span className="byline-credit">Made with ❤️ by <a href="https://github.com/lordamit" target="_blank" rel="noopener noreferrer">Amit Seal Ami</a></span>
+                <span className="byline-dot">•</span>
+                <a href="https://github.com/lordamit/borderify" target="_blank" rel="noopener noreferrer" className="byline-link">
+                  <svg viewBox="0 0 24 24" width="11" height="11" stroke="currentColor" strokeWidth="2.5" fill="none" strokeLinecap="round" strokeLinejoin="round" style={{ verticalAlign: 'middle', marginRight: '3px' }}>
+                    <path d="M9 19c-5 1.5-5-2.5-7-3m14 6v-3.87a3.37 3.37 0 0 0-.94-2.61c3.14-.35 6.44-1.54 6.44-7A5.44 5.44 0 0 0 20 4.77 5.07 5.07 0 0 0 19.91 1S18.73.65 16 2.48a13.38 13.38 0 0 0-7 0C6.27.65 5.09 1 5.09 1A5.07 5.07 0 0 0 5 4.77a5.44 5.44 0 0 0-1.5 3.78c0 5.42 3.3 6.61 6.44 7A3.37 3.37 0 0 0 9 18.13V22"></path>
+                  </svg>
+                  GitHub
+                </a>
+              </span>
+            </div>
           </div>
           <div className="actions">
             <input
@@ -416,8 +429,8 @@ function App() {
         </div>
       </div>
 
-      <SidebarControls 
-        onPreviewExport={handlePreviewExport} 
+      <SidebarControls
+        onPreviewExport={handlePreviewExport}
         isPreviewLoading={isPreviewLoading}
         onSavePreset={savePresetJSON}
         onLoadPreset={() => importPresetRef.current?.click()}

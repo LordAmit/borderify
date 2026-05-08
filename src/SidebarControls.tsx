@@ -229,7 +229,7 @@ const SidebarControls: React.FC<SidebarControlsProps> = ({
       if (w && h) targetRatio = w / h;
     }
 
-    let baseLength = longestEdge * scaleLimit;
+    const baseLength = longestEdge * scaleLimit;
     let cWidth, cHeight;
     if (targetRatio > 1) { 
       cWidth = baseLength;
