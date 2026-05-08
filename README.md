@@ -1,73 +1,72 @@
-# React + TypeScript + Vite
+# Borderify
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+[Borderify](https://amitsealami.com/ai/borderify) is a open source Progressive Web App (PWA) for gallery-grade image styling, vibe coded from scratch using Google's Antigravity and Gemini 3.0 Pro/Flash. 
 
-Currently, two official plugins are available:
+It allows you to add professional Polaroid-style borders, variable background blurring, and customize your image presentations effortlessly. It runs fully offline and can be installed natively on both mobile devices and desktops.
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+If you like this, do not forget to give us a Star! That's the only way we can estimate whether people are using it or not since we do not collect any data, at all.
 
-## React Compiler
+![](img/borderify_demo.webp)
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+## Running Locally
 
-## Expanding the ESLint configuration
+To get started with Borderify locally, you'll need Node.js installed.
 
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
-
-```js
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-
-      // Remove tseslint.configs.recommended and replace with this
-      tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      tseslint.configs.stylisticTypeChecked,
-
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+```sh
+git clone https://github.com/lordamit/borderify.git
+cd borderify
+npm install
+npm run dev
 ```
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
+This will start the Vite development server. You can access the app at `http://localhost:5173`.
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
+## Dev Docs
 
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
-```
+Want to look at source code? Want to run tests or build things yourself? 
+
+- **Build for production:** `npm run build`
+- **Run tests (Vitest):** `npm run test`
+
+The core rendering logic is inside `src/render.ts`, and the state is managed in `src/store.tsx`. The application relies heavily on standard Web Canvas APIs for performance and accurate EXIF metadata preservation.
+
+## Features
+
+The following features are implemented:
+
+1. **Professional Styling:** Add Polaroid-style borders and variable background blurring.
+2. **Preset Management:** Save and load your design configurations (borders, colors, margins, fonts, and logos) via JSON.
+3. **Custom Export Settings:** Control JPEG compression quality and set resolution limits (Original, 4K, Facebook 2048px, Instagram 1350px).
+4. **EXIF Preservation:** Original camera EXIF metadata is forcefully re-injected back into the final JPEG regardless of compression or scaling.
+5. **Batch Processing:** Apply your selected preset and export settings to multiple photos at once.
+6. **PWA Support:** Installable as a native-like app on iOS, Android, and Desktops.
+
+We might implement additional features in the future based on user feedback. The current version is stable and should work as intended.
+
+## Bugs
+
+If you find any issues, please report them! Since this relies heavily on Canvas and File APIs, performance might vary on extremely old devices.
+
+The blur effect does not work on mobile browsers, we are aware of that. I do not know why and how to fix it, so any help on this will be great. 
+
+### iOS Safari Memory Limits
+
+When processing extremely large RAW files or very high-resolution images in batch mode on older iOS devices, Safari might enforce strict memory limits. If the app reloads during export, try utilizing the `4K` or `Facebook` resolution limits.
+
+
+## Disclaimer 
+
+This project was entirely vibe coded using **Google Antigravity** and **Gemini 3.0 Pro/Flash**. 
+
+This does not mean I do not know what I am doing, or at least what I wanted to achieve through vibe coding, since I have industry experience and academic background in software engineering. 
+However, I don't have experience in web tech as a stack nor do I have the time to develop my skills in it. 
+So in the unlikely case that you find a bug in this app, I will probably attempt to solve it through vibe coding anyway, since I have no idea what the code means, or is doing. 
+In other words, use at your own risk. 
+It is unlikely that it will 
+ 
+  - collect data
+  - corrupt local documents
+  - corrupt your photos
+  - harm you in anyway
+  
+  unless Gemini decided to add those features without telling me. That is still unlikely since websites are sandboxed in a browser, usually. 
