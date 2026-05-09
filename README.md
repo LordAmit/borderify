@@ -21,6 +21,8 @@ npm run dev
 
 This will start the Vite development server. You can access the app at `http://localhost:5173`.
 
+Want to just try it in a browser without compiling from source? Check out the webapp hosted on GitHub: https://amitsealami.com/ai/borderify.
+
 ## Dev Docs
 
 Want to look at source code? Want to run tests or build things yourself? 
@@ -45,7 +47,7 @@ We might implement additional features in the future based on user feedback. The
 
 ## Bugs
 
-If you find any issues, please report them! Since this relies heavily on Canvas and File APIs, performance might vary on extremely old devices.
+If you find any issues, please report them on [GitHub](https://github.com/LordAmit/borderify/issues)! Since this relies heavily on Canvas and File APIs, performance might vary on extremely old devices.
 
 The blur effect does not work on mobile browsers, we are aware of that. I do not know why and how to fix it, so any help on this will be great. 
 
