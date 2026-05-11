@@ -16,18 +16,33 @@ const CanvasPreview: React.FC = () => {
     const img = new Image();
     img.src = activeImage.objectUrl;
 
-    img.onload = () => {
-      // Load Logo if available
+    const draw = () => {
+      if (!canvasRef.current) return;
       if (config.logo.dataUrl) {
         const logo = new Image();
         logo.src = config.logo.dataUrl;
-        logo.onload = () => {
-          renderPhotoBorder(canvasRef.current!, activeImage, img, config, logo);
+        
+        let logoDrawn = false;
+        const drawWithLogo = () => {
+          if (logoDrawn || !canvasRef.current) return;
+          logoDrawn = true;
+          renderPhotoBorder(canvasRef.current, activeImage, img, config, logo);
+        };
+
+        logo.onload = drawWithLogo;
+        if (logo.complete) {
+          drawWithLogo();
         }
       } else {
-        renderPhotoBorder(canvasRef.current!, activeImage, img, config, null);
+        renderPhotoBorder(canvasRef.current, activeImage, img, config, null);
       }
     };
+
+    if (img.complete) {
+      draw();
+    } else {
+      img.onload = draw;
+    }
   }, [activeImage, config]);
 
   return (

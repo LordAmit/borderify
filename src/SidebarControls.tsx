@@ -23,8 +23,8 @@ const SliderRow = ({ label, value, min, max, step, onChange, onReset }: any) => 
 const ChipGroup = ({ options, value, onChange }: any) => (
   <div className="chip-group">
     {options.map((opt: any) => (
-      <button 
-        key={opt.value} 
+      <button
+        key={opt.value}
         className={`chip ${value === opt.value ? 'active' : ''}`}
         onClick={() => onChange(opt.value)}
       >
@@ -44,7 +44,7 @@ const GridPositionSelector = ({ value, onChange }: any) => {
   return (
     <div className="grid-position-selector">
       {grid.flat().map((pos) => (
-        <div 
+        <div
           key={pos}
           className={`grid-dot ${value === pos ? 'active' : ''}`}
           onClick={() => onChange(pos)}
@@ -70,6 +70,7 @@ const StyleGallery = ({ config, updateConfig }: any) => {
           backgroundBlurScale: 0.02,
           innerBorderMode: 'polaroid',
           innerBorderSideScale: 0.02,
+          innerBorderTopScale: 0.02,
           innerBorderBottomScale: 0.12,
           borderWidthScale: 0.05,
         },
@@ -115,7 +116,7 @@ const StyleGallery = ({ config, updateConfig }: any) => {
           innerBorderBottomScale: 0,
           borderWidthScale: 0.03,
         },
-        labels: c.labels.map((l: any) => ({ ...l, show: false })),
+        labels: c.labels.map((l: any, i: number) => i === 0 ? { ...l, show: true } : l),
         exifPills: { ...c.exifPills, show: false }
       })
     }
@@ -124,7 +125,7 @@ const StyleGallery = ({ config, updateConfig }: any) => {
   return (
     <div className="style-gallery">
       {styles.map(s => (
-        <div 
+        <div
           key={s.id}
           className={`style-card ${config.layout.innerBorderMode === s.id || (s.id === 'polaroid' && config.layout.innerBorderMode === 'polaroid') ? 'active' : ''}`}
           onClick={() => updateConfig(s.apply)}
@@ -145,13 +146,13 @@ const TagBar = ({ value, onChange, tags }: { value: string, onChange: (val: stri
       {tags.map(tagStr => {
         const isActive = value.includes(tagStr);
         return (
-          <span 
-            key={tagStr} 
+          <span
+            key={tagStr}
             className="chip"
-            style={{ 
-              fontSize: '10px', 
-              padding: '2px 6px', 
-              background: isActive ? 'rgba(56, 189, 248, 0.2)' : 'rgba(255,255,255,0.05)', 
+            style={{
+              fontSize: '10px',
+              padding: '2px 6px',
+              background: isActive ? 'rgba(56, 189, 248, 0.2)' : 'rgba(255,255,255,0.05)',
               borderRadius: '4px',
               cursor: 'pointer',
               border: isActive ? '1px solid rgba(56, 189, 248, 0.4)' : '1px solid rgba(255,255,255,0.1)',
@@ -187,17 +188,17 @@ interface SidebarControlsProps {
   hasMultipleImages?: boolean;
 }
 
-const SidebarControls: React.FC<SidebarControlsProps> = ({ 
-  onPreviewExport, 
-  isPreviewLoading, 
-  onSavePreset, 
+const SidebarControls: React.FC<SidebarControlsProps> = ({
+  onPreviewExport,
+  isPreviewLoading,
+  onSavePreset,
   onLoadPreset,
   onExportSingle,
   onExportBatch,
   hasImages,
   hasMultipleImages
 }) => {
-  const { state, updateConfig, updateImageCaption } = useStore();
+  const { state, updateConfig, updateImageCaption, setState } = useStore();
   const config = state.config;
   const activeImageObj = state.images.find(img => img.id === state.activeImageId);
   const currentCaption = activeImageObj?.captionText ?? (config.labels[0]?.text || '');
@@ -205,6 +206,33 @@ const SidebarControls: React.FC<SidebarControlsProps> = ({
   const [openSection, setOpenSection] = useState<string>('layout');
   const [showAdvancedLayout, setShowAdvancedLayout] = useState(false);
   const [showAdvancedExif, setShowAdvancedExif] = useState(false);
+  const [applyCaptionToAll, setApplyCaptionToAll] = useState(false);
+
+  const handleCaptionChange = (newVal: string) => {
+    if (applyCaptionToAll) {
+      setState((prev: any) => ({
+        ...prev,
+        images: prev.images.map((img: any) => ({ ...img, captionText: newVal }))
+      }));
+    } else if (state.activeImageId) {
+      updateImageCaption(state.activeImageId, newVal);
+    } else {
+      updateConfig(c => ({
+        ...c,
+        labels: [{ ...c.labels[0], text: newVal }]
+      }));
+    }
+  };
+
+  const handleToggleApplyAll = (checked: boolean) => {
+    setApplyCaptionToAll(checked);
+    if (checked) {
+      setState((prev: any) => ({
+        ...prev,
+        images: prev.images.map((img: any) => ({ ...img, captionText: currentCaption }))
+      }));
+    }
+  };
 
   const toggleSection = (section: string) => {
     setOpenSection(openSection === section ? '' : section);
@@ -231,10 +259,10 @@ const SidebarControls: React.FC<SidebarControlsProps> = ({
 
     const baseLength = longestEdge * scaleLimit;
     let cWidth, cHeight;
-    if (targetRatio > 1) { 
+    if (targetRatio > 1) {
       cWidth = baseLength;
       cHeight = baseLength / targetRatio;
-    } else { 
+    } else {
       cHeight = baseLength;
       cWidth = baseLength * targetRatio;
     }
@@ -245,7 +273,7 @@ const SidebarControls: React.FC<SidebarControlsProps> = ({
   return (
     <div className="sidebar">
       <div className="sidebar-content">
-        
+
         <label className="label" style={{ marginBottom: '8px' }}>Styles</label>
         <StyleGallery config={config} updateConfig={updateConfig} />
 
@@ -262,7 +290,7 @@ const SidebarControls: React.FC<SidebarControlsProps> = ({
             <div className="accordion-body">
               <div className="control-group">
                 <label className="label">Ratio</label>
-                <ChipGroup 
+                <ChipGroup
                   value={config.layout.aspectRatio}
                   onChange={(val: string) => updateConfig(c => ({ ...c, layout: { ...c.layout, aspectRatio: val } }))}
                   options={[
@@ -343,8 +371,8 @@ const SidebarControls: React.FC<SidebarControlsProps> = ({
                 />
               </div>
 
-              <div 
-                className="advanced-toggle" 
+              <div
+                className="advanced-toggle"
                 onClick={() => setShowAdvancedLayout(!showAdvancedLayout)}
               >
                 <span>Advanced Border & Effects</span>
@@ -502,29 +530,55 @@ const SidebarControls: React.FC<SidebarControlsProps> = ({
                   rows={2}
                   style={{ resize: 'vertical' }}
                   value={currentCaption}
-                  onChange={(e) => {
-                    if (state.activeImageId) {
-                      updateImageCaption(state.activeImageId, e.target.value);
-                    } else {
-                      updateConfig(c => ({
-                        ...c,
-                        labels: [{ ...c.labels[0], text: e.target.value }]
-                      }));
-                    }
-                  }}
+                  onChange={(e) => handleCaptionChange(e.target.value)}
                   placeholder="Enter caption for this photo..."
                 />
-                  <TagBar 
-                    value={currentCaption} 
-                    onChange={(val) => {
-                      if (state.activeImageId) {
-                        updateImageCaption(state.activeImageId, val);
-                      } else {
-                        updateConfig(c => ({ ...c, labels: [{ ...c.labels[0], text: val }] }));
-                      }
-                    }}
-                    tags={['{make}', '{model}', '{iso}', '{shutter}', '{f}', '{focal}', '{lens}', '{date}']}
-                  />
+                <TagBar
+                  value={currentCaption}
+                  onChange={handleCaptionChange}
+                  tags={['{make}', '{model}', '{iso}', '{shutter}', '{f}', '{focal}', '{lens}', '{date}']}
+                />
+
+                <div style={{ fontSize: '11px', color: 'var(--text-secondary)', marginTop: '6px', lineHeight: '1.4' }}>
+                  Tip: You can format text as <code>**bold**</code> and <code>*italic*</code>
+                </div>
+
+                {hasMultipleImages && (
+                  <div style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '8px',
+                    marginTop: '12px',
+                    padding: '8px 12px',
+                    background: 'rgba(255, 255, 255, 0.02)',
+                    borderRadius: '8px',
+                    border: '1px solid rgba(255, 255, 255, 0.05)'
+                  }}>
+                    <input
+                      type="checkbox"
+                      id="apply-caption-all"
+                      checked={applyCaptionToAll}
+                      onChange={(e) => handleToggleApplyAll(e.target.checked)}
+                      style={{
+                        width: '15px',
+                        height: '15px',
+                        accentColor: '#38bdf8',
+                        cursor: 'pointer'
+                      }}
+                    />
+                    <label
+                      htmlFor="apply-caption-all"
+                      style={{
+                        fontSize: '12px',
+                        color: 'var(--text-secondary)',
+                        cursor: 'pointer',
+                        userSelect: 'none'
+                      }}
+                    >
+                      Apply same caption to all {state.images.length} photos in batch
+                    </label>
+                  </div>
+                )}
               </div>
 
               <div className="control-group">
@@ -582,7 +636,7 @@ const SidebarControls: React.FC<SidebarControlsProps> = ({
                   >
                     +
                   </button>
-                  <button 
+                  <button
                     className={`btn btn-outline ${config.labels[0].fontWeight === 'bold' ? 'active' : ''}`}
                     style={{ padding: '0 12px', minWidth: '40px', borderColor: config.labels[0].fontWeight === 'bold' ? 'var(--accent-color)' : '' }}
                     onClick={() => updateConfig(c => ({
@@ -591,7 +645,7 @@ const SidebarControls: React.FC<SidebarControlsProps> = ({
                   >
                     <Bold size={16} />
                   </button>
-                  <button 
+                  <button
                     className={`btn btn-outline ${config.labels[0].fontStyle === 'italic' ? 'active' : ''}`}
                     style={{ padding: '0 12px', minWidth: '40px', borderColor: config.labels[0].fontStyle === 'italic' ? 'var(--accent-color)' : '' }}
                     onClick={() => updateConfig(c => ({
@@ -615,7 +669,7 @@ const SidebarControls: React.FC<SidebarControlsProps> = ({
               <div className="control-group">
                 <label className="label">Text Position</label>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                  <GridPositionSelector 
+                  <GridPositionSelector
                     value={config.labels[0].position}
                     onChange={(pos: any) => updateConfig(c => ({
                       ...c, labels: [{ ...c.labels[0], position: pos }]
@@ -730,7 +784,7 @@ const SidebarControls: React.FC<SidebarControlsProps> = ({
                   <div className="control-group">
                     <label className="label">Position</label>
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                      <GridPositionSelector 
+                      <GridPositionSelector
                         value={config.logo.position}
                         onChange={(pos: any) => updateConfig(c => ({
                           ...c, logo: { ...c.logo, position: pos }
@@ -771,45 +825,45 @@ const SidebarControls: React.FC<SidebarControlsProps> = ({
 
           {openSection === 'exif' && (
             <div className="accordion-body">
-                <label className="label" style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '16px', cursor: 'pointer' }}>
-                  <input
-                    type="checkbox"
-                    checked={config.exifPills.show}
-                    onChange={(e) => updateConfig(c => ({ ...c, exifPills: { ...c.exifPills, show: e.target.checked } }))}
-                  />
-                  Show EXIF Pills
-                </label>
+              <label className="label" style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '16px', cursor: 'pointer' }}>
+                <input
+                  type="checkbox"
+                  checked={config.exifPills.show}
+                  onChange={(e) => updateConfig(c => ({ ...c, exifPills: { ...c.exifPills, show: e.target.checked } }))}
+                />
+                Show EXIF Pills
+              </label>
 
-                {config.exifPills.show && (
-                  <>
-                    <div className="control-group">
-                      <label className="label">EXIF Position</label>
-                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                        <GridPositionSelector 
-                          value={config.exifPills.position}
-                          onChange={(pos: any) => updateConfig(c => ({
-                            ...c, exifPills: { ...c.exifPills, position: pos }
-                          }))}
-                        />
-                        <div style={{ fontSize: '10px', color: 'var(--text-secondary)' }}>{config.exifPills.position}</div>
-                      </div>
+              {config.exifPills.show && (
+                <>
+                  <div className="control-group">
+                    <label className="label">EXIF Position</label>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                      <GridPositionSelector
+                        value={config.exifPills.position}
+                        onChange={(pos: any) => updateConfig(c => ({
+                          ...c, exifPills: { ...c.exifPills, position: pos }
+                        }))}
+                      />
+                      <div style={{ fontSize: '10px', color: 'var(--text-secondary)' }}>{config.exifPills.position}</div>
                     </div>
+                  </div>
 
-                    <SliderRow
-                      label="Size"
-                      value={config.exifPills.fontSizeScale}
-                      min="0.002" max="0.05" step="0.001"
-                      onChange={(val: number) => updateConfig(c => ({ ...c, exifPills: { ...c.exifPills, fontSizeScale: val } }))}
-                      onReset={() => updateConfig(c => ({ ...c, exifPills: { ...c.exifPills, fontSizeScale: defaultConfig.exifPills.fontSizeScale } }))}
-                    />
+                  <SliderRow
+                    label="Size"
+                    value={config.exifPills.fontSizeScale}
+                    min="0.002" max="0.05" step="0.001"
+                    onChange={(val: number) => updateConfig(c => ({ ...c, exifPills: { ...c.exifPills, fontSizeScale: val } }))}
+                    onReset={() => updateConfig(c => ({ ...c, exifPills: { ...c.exifPills, fontSizeScale: defaultConfig.exifPills.fontSizeScale } }))}
+                  />
 
-                    <SliderRow
-                      label="Padding"
-                      value={config.exifPills.internalPaddingScale}
-                      min="0.1" max="2.0" step="0.05"
-                      onChange={(val: number) => updateConfig(c => ({ ...c, exifPills: { ...c.exifPills, internalPaddingScale: val } }))}
-                      onReset={() => updateConfig(c => ({ ...c, exifPills: { ...c.exifPills, internalPaddingScale: 0.8 } }))}
-                    />
+                  <SliderRow
+                    label="Padding"
+                    value={config.exifPills.internalPaddingScale}
+                    min="0.1" max="2.0" step="0.05"
+                    onChange={(val: number) => updateConfig(c => ({ ...c, exifPills: { ...c.exifPills, internalPaddingScale: val } }))}
+                    onReset={() => updateConfig(c => ({ ...c, exifPills: { ...c.exifPills, internalPaddingScale: 0.8 } }))}
+                  />
 
 
                   <div className="control-group">
@@ -826,7 +880,7 @@ const SidebarControls: React.FC<SidebarControlsProps> = ({
                       ].map(item => {
                         const isActive = (config.exifPills as any)[item.key];
                         return (
-                          <span 
+                          <span
                             key={item.key}
                             className={`chip ${isActive ? 'active' : ''}`}
                             style={{
@@ -854,8 +908,8 @@ const SidebarControls: React.FC<SidebarControlsProps> = ({
                   </div>
 
 
-                  <div 
-                    className="advanced-toggle" 
+                  <div
+                    className="advanced-toggle"
                     onClick={() => setShowAdvancedExif(!showAdvancedExif)}
                   >
                     <span>Advanced EXIF Positioning & Styles</span>
@@ -993,19 +1047,19 @@ const SidebarControls: React.FC<SidebarControlsProps> = ({
                 Save your layout, branding, and EXIF settings to a file, or load an existing template file.
               </p>
               <div style={{ display: 'flex', gap: '10px' }}>
-                <button 
-                  className="btn btn-outline" 
-                  style={{ flex: 1, padding: '8px 12px', fontSize: '13px', justifyContent: 'center' }}
-                  onClick={onLoadPreset}
-                >
-                  <FileJson size={14} /> Import JSON
-                </button>
-                <button 
-                  className="btn btn-primary" 
-                  style={{ flex: 1, padding: '8px 12px', fontSize: '13px', justifyContent: 'center' }}
+                <button
+                  className="btn-preset-save"
+                  style={{ flex: 1 }}
                   onClick={onSavePreset}
                 >
-                  <Save size={14} /> Save JSON
+                  <Save size={14} /> Save preset
+                </button>
+                <button
+                  className="btn-preset-load"
+                  style={{ flex: 1 }}
+                  onClick={onLoadPreset}
+                >
+                  <FileJson size={14} /> Load preset
                 </button>
               </div>
             </div>
@@ -1053,29 +1107,29 @@ const SidebarControls: React.FC<SidebarControlsProps> = ({
               />
 
               {onPreviewExport && (
-                <button 
-                  className="btn btn-outline" 
+                <button
+                  className="btn btn-outline"
                   style={{ width: '100%', marginTop: '16px', justifyContent: 'center' }}
                   onClick={onPreviewExport}
                   disabled={isPreviewLoading}
                 >
-                  <Image size={16} /> 
+                  <Image size={16} />
                   {isPreviewLoading ? 'Generating...' : 'Preview Export Quality'}
                 </button>
               )}
 
               {hasImages && (
                 <div style={{ marginTop: '16px', borderTop: '1px solid var(--surface-border)', paddingTop: '16px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                  <button 
-                    className="btn btn-primary" 
+                  <button
+                    className="btn btn-primary"
                     style={{ width: '100%', justifyContent: 'center' }}
                     onClick={onExportSingle}
                   >
                     <Download size={16} /> Save Current Image
                   </button>
                   {hasMultipleImages && (
-                    <button 
-                      className="btn btn-outline" 
+                    <button
+                      className="btn btn-outline"
                       style={{ width: '100%', justifyContent: 'center' }}
                       onClick={onExportBatch}
                     >

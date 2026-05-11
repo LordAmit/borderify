@@ -25,7 +25,7 @@ export const defaultConfig: AppConfig = {
     {
       id: "1",
       show: true,
-      text: "**{make}** *{model}*",
+      text: "{make} {model}",
       fontFamily: "'Helvetica Neue', Helvetica, Arial, sans-serif",
       fontSizeScale: 0.022, 
       color: "#1e293b",
