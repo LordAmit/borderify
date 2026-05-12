@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useStore, defaultConfig } from './store';
-import { Type, Square, Database, RotateCcw, Frame, Maximize, Image, Bold, Italic, Download, FileJson, Save, Archive } from 'lucide-react';
+import { Type, Square, Database, RotateCcw, Frame, Maximize, Image, Bold, Italic, Download, FileJson, Save, Archive, AlertTriangle } from 'lucide-react';
 
 const SliderRow = ({ label, value, min, max, step, onChange, onReset }: any) => {
   return (
@@ -202,6 +202,7 @@ const SidebarControls: React.FC<SidebarControlsProps> = ({
   const config = state.config;
   const activeImageObj = state.images.find(img => img.id === state.activeImageId);
   const currentCaption = activeImageObj?.captionText ?? (config.labels[0]?.text || '');
+  const hasExif = activeImageObj && Object.values(activeImageObj.exif).some(val => val !== undefined && val !== null && val !== '');
 
   const [openSection, setOpenSection] = useState<string>('layout');
   const [showAdvancedLayout, setShowAdvancedLayout] = useState(false);
@@ -523,6 +524,24 @@ const SidebarControls: React.FC<SidebarControlsProps> = ({
 
           {openSection === 'typography' && config.labels.length > 0 && (
             <div className="accordion-body">
+              {activeImageObj && !hasExif && (
+                <div style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '8px',
+                  padding: '10px 12px',
+                  background: 'rgba(234, 179, 8, 0.08)',
+                  border: '1px solid rgba(234, 179, 8, 0.2)',
+                  borderRadius: '8px',
+                  color: '#facc15',
+                  fontSize: '12px',
+                  lineHeight: '1.4',
+                  marginBottom: '16px'
+                }}>
+                  <AlertTriangle size={16} style={{ flexShrink: 0 }} />
+                  <div>No EXIF data detected in this photo. Dynamic tags like <code>{`{make}`}</code> or <code>{`{model}`}</code> will remain blank.</div>
+                </div>
+              )}
               <div className="control-group">
                 <label className="label">Caption Text</label>
                 <textarea
@@ -825,6 +844,24 @@ const SidebarControls: React.FC<SidebarControlsProps> = ({
 
           {openSection === 'exif' && (
             <div className="accordion-body">
+              {activeImageObj && !hasExif && (
+                <div style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '8px',
+                  padding: '10px 12px',
+                  background: 'rgba(234, 179, 8, 0.08)',
+                  border: '1px solid rgba(234, 179, 8, 0.2)',
+                  borderRadius: '8px',
+                  color: '#facc15',
+                  fontSize: '12px',
+                  lineHeight: '1.4',
+                  marginBottom: '16px'
+                }}>
+                  <AlertTriangle size={16} style={{ flexShrink: 0 }} />
+                  <div>No EXIF data detected in this photo. Dynamic EXIF pills cannot be shown.</div>
+                </div>
+              )}
               <label className="label" style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '16px', cursor: 'pointer' }}>
                 <input
                   type="checkbox"
