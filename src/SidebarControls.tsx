@@ -21,34 +21,46 @@ const SliderRow = ({ label, value, min, max, step, onChange, onReset }: any) => 
 
   return (
     <div className="compact-slider">
-      <label className="label" title={label}>{label}</label>
-      <div className="slider-container" style={{ display: 'flex', alignItems: 'center', gap: '6px', flex: 1 }}>
+      <div className="label-row">
+        <label className="label" title={label}>{label}</label>
+        <button
+          onClick={onReset}
+          title="Reset"
+          style={{ background: 'none', border: 'none', padding: 0, cursor: 'pointer', color: '#94a3b8', display: 'flex', alignItems: 'center' }}
+        >
+          <RotateCcw size={12} />
+        </button>
+      </div>
+      <div className="slider-container">
         <button
           onClick={() => handleNudge('prev')}
           style={{
-            background: 'none',
-            border: 'none',
+            background: 'rgba(255, 255, 255, 0.05)',
+            border: '1px solid rgba(255, 255, 255, 0.1)',
+            borderRadius: '4px',
             color: 'var(--text-secondary, #94a3b8)',
             cursor: 'pointer',
-            padding: '4px 8px',
-            fontSize: '16px',
+            padding: 0,
+            fontSize: '14px',
             fontWeight: 'bold',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
             userSelect: 'none',
             opacity: numericValue <= numericMin ? 0.3 : 0.8,
-            minWidth: '24px',
-            height: '24px'
+            minWidth: '28px',
+            height: '28px',
+            transition: 'all 0.15s ease'
           }}
           disabled={numericValue <= numericMin}
           title="Decrease"
+          className="nudge-btn"
         >
           −
         </button>
         <input 
           type="range" 
-          style={{ width: '100%', flex: 1 }} 
+          style={{ width: '100%', flex: 1, accentColor: 'var(--accent-color)' }} 
           min={min} 
           max={max} 
           step={step} 
@@ -58,34 +70,30 @@ const SliderRow = ({ label, value, min, max, step, onChange, onReset }: any) => 
         <button
           onClick={() => handleNudge('next')}
           style={{
-            background: 'none',
-            border: 'none',
+            background: 'rgba(255, 255, 255, 0.05)',
+            border: '1px solid rgba(255, 255, 255, 0.1)',
+            borderRadius: '4px',
             color: 'var(--text-secondary, #94a3b8)',
             cursor: 'pointer',
-            padding: '4px 8px',
-            fontSize: '16px',
+            padding: 0,
+            fontSize: '14px',
             fontWeight: 'bold',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
             userSelect: 'none',
             opacity: numericValue >= numericMax ? 0.3 : 0.8,
-            minWidth: '24px',
-            height: '24px'
+            minWidth: '28px',
+            height: '28px',
+            transition: 'all 0.15s ease'
           }}
           disabled={numericValue >= numericMax}
           title="Increase"
+          className="nudge-btn"
         >
           +
         </button>
       </div>
-      <button
-        onClick={onReset}
-        title="Reset"
-        style={{ background: 'none', border: 'none', padding: 0, cursor: 'pointer', color: '#94a3b8', display: 'flex', justifyContent: 'center' }}
-      >
-        <RotateCcw size={12} />
-      </button>
     </div>
   );
 };
