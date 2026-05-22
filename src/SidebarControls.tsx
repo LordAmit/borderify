@@ -4,11 +4,80 @@ import type { TextLabel } from './types';
 import { Type, Square, Database, RotateCcw, Frame, Maximize, Image, Bold, Italic, Download, FileJson, Save, Archive, AlertTriangle } from 'lucide-react';
 
 const SliderRow = ({ label, value, min, max, step, onChange, onReset }: any) => {
+  const numericValue = parseFloat(value) || 0;
+  const numericMin = parseFloat(min) || 0;
+  const numericMax = parseFloat(max) || 0;
+  const numericStep = parseFloat(step) || 0.01;
+
+  const handleNudge = (direction: 'prev' | 'next') => {
+    let newVal = direction === 'prev' ? numericValue - numericStep : numericValue + numericStep;
+    // Round to step precision to prevent JavaScript floating point errors
+    const decimalPlaces = (step.toString().split('.')[1] || '').length;
+    newVal = parseFloat(newVal.toFixed(decimalPlaces));
+    // Clamp between min and max
+    newVal = Math.max(numericMin, Math.min(numericMax, newVal));
+    onChange(newVal);
+  };
+
   return (
     <div className="compact-slider">
       <label className="label" title={label}>{label}</label>
-      <div className="slider-container">
-        <input type="range" style={{ width: '100%' }} min={min} max={max} step={step} value={value} onChange={(e) => onChange(parseFloat(e.target.value))} />
+      <div className="slider-container" style={{ display: 'flex', alignItems: 'center', gap: '6px', flex: 1 }}>
+        <button
+          onClick={() => handleNudge('prev')}
+          style={{
+            background: 'none',
+            border: 'none',
+            color: 'var(--text-secondary, #94a3b8)',
+            cursor: 'pointer',
+            padding: '4px 8px',
+            fontSize: '16px',
+            fontWeight: 'bold',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            userSelect: 'none',
+            opacity: numericValue <= numericMin ? 0.3 : 0.8,
+            minWidth: '24px',
+            height: '24px'
+          }}
+          disabled={numericValue <= numericMin}
+          title="Decrease"
+        >
+          −
+        </button>
+        <input 
+          type="range" 
+          style={{ width: '100%', flex: 1 }} 
+          min={min} 
+          max={max} 
+          step={step} 
+          value={value} 
+          onChange={(e) => onChange(parseFloat(e.target.value))} 
+        />
+        <button
+          onClick={() => handleNudge('next')}
+          style={{
+            background: 'none',
+            border: 'none',
+            color: 'var(--text-secondary, #94a3b8)',
+            cursor: 'pointer',
+            padding: '4px 8px',
+            fontSize: '16px',
+            fontWeight: 'bold',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            userSelect: 'none',
+            opacity: numericValue >= numericMax ? 0.3 : 0.8,
+            minWidth: '24px',
+            height: '24px'
+          }}
+          disabled={numericValue >= numericMax}
+          title="Increase"
+        >
+          +
+        </button>
       </div>
       <button
         onClick={onReset}
