@@ -115,8 +115,8 @@ function App() {
         id: uuidv4(),
         file,
         objectUrl,
-        width: tempImg.width,
-        height: tempImg.height,
+        width: tempImg.naturalWidth || tempImg.width,
+        height: tempImg.naturalHeight || tempImg.height,
         exif,
         rawExifStr,
         captionText: state.config.labels[0].text,
@@ -182,7 +182,7 @@ function App() {
         img.src = image.objectUrl;
       });
 
-      let overrideMaxRes = 8000;
+      let overrideMaxRes = Infinity;
       if (state.config.export?.maxResolution === "4K") overrideMaxRes = 3840;
       if (state.config.export?.maxResolution === "Facebook") overrideMaxRes = 2048;
       if (state.config.export?.maxResolution === "Instagram") overrideMaxRes = 1350;
@@ -226,7 +226,7 @@ function App() {
       img.src = targetImage.objectUrl;
     });
 
-    let overrideMaxRes = 8000;
+    let overrideMaxRes = Infinity;
     if (state.config.export?.maxResolution === "4K") overrideMaxRes = 3840;
     if (state.config.export?.maxResolution === "Facebook") overrideMaxRes = 2048;
     if (state.config.export?.maxResolution === "Instagram") overrideMaxRes = 1350;
@@ -266,7 +266,7 @@ function App() {
       img.src = targetImage.objectUrl;
     });
 
-    let overrideMaxRes = 8000;
+    let overrideMaxRes = Infinity;
     if (state.config.export?.maxResolution === "4K") overrideMaxRes = 3840;
     if (state.config.export?.maxResolution === "Facebook") overrideMaxRes = 2048;
     if (state.config.export?.maxResolution === "Instagram") overrideMaxRes = 1350;

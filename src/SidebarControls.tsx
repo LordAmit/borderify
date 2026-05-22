@@ -241,7 +241,7 @@ const SidebarControls: React.FC<SidebarControlsProps> = ({
 
   const projectedDimensions = React.useMemo(() => {
     if (!activeImageObj) return null;
-    let overrideMaxRes = 8000;
+    let overrideMaxRes = Infinity;
     if (config.export?.maxResolution === "4K") overrideMaxRes = 3840;
     if (config.export?.maxResolution === "Facebook") overrideMaxRes = 2048;
     if (config.export?.maxResolution === "Instagram") overrideMaxRes = 1350;

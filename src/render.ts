@@ -41,14 +41,17 @@ export const renderPhotoBorder = (
   const ctx = canvas.getContext('2d');
   if (!ctx) return;
 
-  const maxRes = overrideMaxRes || 8000;
+  const imgWidth = imgObject.naturalWidth || imgObject.width;
+  const imgHeight = imgObject.naturalHeight || imgObject.height;
+
+  const maxRes = overrideMaxRes !== undefined ? overrideMaxRes : 8000;
   let scaleLimit = 1;
-  const longestEdge = Math.max(imgObject.width, imgObject.height);
+  const longestEdge = Math.max(imgWidth, imgHeight);
   if (longestEdge > maxRes) {
     scaleLimit = maxRes / longestEdge;
   }
 
-  let targetRatio = imgObject.width / imgObject.height;
+  let targetRatio = imgWidth / imgHeight;
   if (config.layout.aspectRatio !== "Original") {
     const [w, h] = config.layout.aspectRatio.split(':').map(Number);
     if (w && h) targetRatio = w / h;
@@ -76,9 +79,9 @@ export const renderPhotoBorder = (
     ctx.fillRect(0, 0, canvas.width, canvas.height);
   } else {
       ctx.save();
-      const coverRatio = Math.max(canvas.width / imgObject.width, canvas.height / imgObject.height);
-      const coverW = imgObject.width * coverRatio;
-      const coverH = imgObject.height * coverRatio;
+      const coverRatio = Math.max(canvas.width / imgWidth, canvas.height / imgHeight);
+      const coverW = imgWidth * coverRatio;
+      const coverH = imgHeight * coverRatio;
       const coverX = (canvas.width - coverW) / 2;
       const coverY = (canvas.height - coverH) / 2;
       
@@ -102,7 +105,7 @@ export const renderPhotoBorder = (
   const innerPadBottom = baseLength * config.layout.innerBorderBottomScale;
   const innerPadSide = baseLength * config.layout.innerBorderSideScale;
 
-  const imgRatio = imgObject.width / imgObject.height;
+  const imgRatio = imgWidth / imgHeight;
   const photoPadding = baseLength * (config.layout.imagePaddingScale || 0);
   const availableImgW = boxW - (innerPadSide * 2) - (photoPadding * 2);
   const availableImgH = boxH - (innerPadTop + innerPadBottom) - (photoPadding * 2);
