@@ -119,7 +119,6 @@ function App() {
         height: tempImg.naturalHeight || tempImg.height,
         exif,
         rawExifStr,
-        captionText: state.config.labels[0].text,
       });
     }
   };
