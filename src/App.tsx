@@ -44,6 +44,32 @@ function App() {
       }
     });
 
+    // Check individual image style overrides for custom fonts
+    state.images.forEach(img => {
+      if (img.captionStyle) {
+        const style = img.captionStyle;
+        if (style.customFontDataUrl && style.fontFamily) {
+          const linkId = `custom-local-font-${style.fontFamily.replace(/\s+/g, '-')}`;
+          if (!document.getElementById(linkId)) {
+            const styleEl = document.createElement('style');
+            styleEl.id = linkId;
+            styleEl.innerHTML = `
+              @font-face {
+                font-family: '${style.fontFamily}';
+                src: url('${style.customFontDataUrl}');
+              }
+            `;
+            document.head.appendChild(styleEl);
+            if ('fonts' in document) {
+              document.fonts.load(`16px "${style.fontFamily}"`).then(() => updateConfig(c => ({ ...c })));
+            }
+          }
+        } else if (style.fontFamily && !style.fontFamily.includes('sans-serif')) {
+          fontsToLoad.add(style.fontFamily.replace(/"/g, '').trim());
+        }
+      }
+    });
+
     // Check EXIF fonts
     if (state.config.exifPills.fontFamily && !state.config.exifPills.fontFamily.includes('sans-serif')) {
       fontsToLoad.add(state.config.exifPills.fontFamily.replace(/"/g, '').trim());
@@ -70,7 +96,7 @@ function App() {
         }
       }
     });
-  }, [state.config.labels, state.config.exifPills.fontFamily, updateConfig]);
+  }, [state.config.labels, state.config.exifPills.fontFamily, state.images, updateConfig]);
 
   const processFiles = async (files: FileList) => {
     for (let i = 0; i < files.length; i++) {

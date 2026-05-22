@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { useStore, defaultConfig } from './store';
+import type { TextLabel } from './types';
 import { Type, Square, Database, RotateCcw, Frame, Maximize, Image, Bold, Italic, Download, FileJson, Save, Archive, AlertTriangle } from 'lucide-react';
 
 const SliderRow = ({ label, value, min, max, step, onChange, onReset }: any) => {
@@ -198,7 +199,7 @@ const SidebarControls: React.FC<SidebarControlsProps> = ({
   hasImages,
   hasMultipleImages
 }) => {
-  const { state, updateConfig, updateImageCaption, setState } = useStore();
+  const { state, updateConfig, updateImageCaption, updateImageCaptionStyle, clearAllImageCaptionStyles, setState } = useStore();
   const config = state.config;
   const activeImageObj = state.images.find(img => img.id === state.activeImageId);
   const currentCaption = activeImageObj?.captionText ?? (config.labels[0]?.text || '');
@@ -208,6 +209,40 @@ const SidebarControls: React.FC<SidebarControlsProps> = ({
   const [showAdvancedLayout, setShowAdvancedLayout] = useState(false);
   const [showAdvancedExif, setShowAdvancedExif] = useState(false);
   const [applyCaptionToAll, setApplyCaptionToAll] = useState(false);
+  const [applyStyleToAll, setApplyStyleToAll] = useState(false);
+
+  const activeLabelStyle = activeImageObj?.captionStyle 
+    ? { ...config.labels[0], ...activeImageObj.captionStyle } 
+    : config.labels[0];
+
+  const handleStyleChange = (updates: Partial<Omit<TextLabel, 'id' | 'text' | 'show'>>) => {
+    if (applyStyleToAll) {
+      updateConfig(c => ({
+        ...c,
+        labels: c.labels.map((l: any, i: number) => i === 0 ? { ...l, ...updates } : l)
+      }));
+      clearAllImageCaptionStyles();
+    } else if (state.activeImageId) {
+      updateImageCaptionStyle(state.activeImageId, updates);
+    } else {
+      updateConfig(c => ({
+        ...c,
+        labels: c.labels.map((l: any, i: number) => i === 0 ? { ...l, ...updates } : l)
+      }));
+    }
+  };
+
+  const handleToggleApplyStyleAll = (checked: boolean) => {
+    setApplyStyleToAll(checked);
+    if (checked) {
+      const activeStyle = activeImageObj?.captionStyle || {};
+      updateConfig(c => ({
+        ...c,
+        labels: c.labels.map((l: any, i: number) => i === 0 ? { ...l, ...activeStyle } : l)
+      }));
+      clearAllImageCaptionStyles();
+    }
+  };
 
   const handleCaptionChange = (newVal: string) => {
     if (applyCaptionToAll) {
@@ -600,16 +635,51 @@ const SidebarControls: React.FC<SidebarControlsProps> = ({
                 )}
               </div>
 
+              {hasMultipleImages && (
+                <div style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '8px',
+                  marginBottom: '16px',
+                  padding: '8px 12px',
+                  background: 'rgba(255, 255, 255, 0.02)',
+                  borderRadius: '8px',
+                  border: '1px solid rgba(255, 255, 255, 0.05)'
+                }}>
+                  <input
+                    type="checkbox"
+                    id="apply-style-all"
+                    checked={applyStyleToAll}
+                    onChange={(e) => handleToggleApplyStyleAll(e.target.checked)}
+                    style={{
+                      width: '15px',
+                      height: '15px',
+                      accentColor: '#38bdf8',
+                      cursor: 'pointer'
+                    }}
+                  />
+                  <label
+                    htmlFor="apply-style-all"
+                    style={{
+                      fontSize: '12px',
+                      color: 'var(--text-secondary)',
+                      cursor: 'pointer',
+                      userSelect: 'none'
+                    }}
+                  >
+                    Apply same styling to all {state.images.length} photos in batch
+                  </label>
+                </div>
+              )}
+
               <div className="control-group">
                 <label className="label">Font</label>
                 <div style={{ display: 'flex', gap: '8px' }}>
                   <input
                     type="text"
                     className="input-field"
-                    value={config.labels[0].fontFamily}
-                    onChange={(e) => updateConfig(c => ({
-                      ...c, labels: [{ ...c.labels[0], fontFamily: e.target.value }]
-                    }))}
+                    value={activeLabelStyle.fontFamily}
+                    onChange={(e) => handleStyleChange({ fontFamily: e.target.value })}
                   />
                   <input
                     type="file"
@@ -637,9 +707,7 @@ const SidebarControls: React.FC<SidebarControlsProps> = ({
 
                         // Force DOM to load font before rendering
                         document.fonts.load(`16px "${fontName}"`).then(() => {
-                          updateConfig(c => ({
-                            ...c, labels: [{ ...c.labels[0], fontFamily: fontName, customFontDataUrl: base64Url }]
-                          }));
+                          handleStyleChange({ fontFamily: fontName, customFontDataUrl: base64Url });
                         });
                       };
                       reader.readAsDataURL(file);
@@ -656,20 +724,16 @@ const SidebarControls: React.FC<SidebarControlsProps> = ({
                     +
                   </button>
                   <button
-                    className={`btn btn-outline ${config.labels[0].fontWeight === 'bold' ? 'active' : ''}`}
-                    style={{ padding: '0 12px', minWidth: '40px', borderColor: config.labels[0].fontWeight === 'bold' ? 'var(--accent-color)' : '' }}
-                    onClick={() => updateConfig(c => ({
-                      ...c, labels: [{ ...c.labels[0], fontWeight: c.labels[0].fontWeight === 'bold' ? 'normal' : 'bold' }]
-                    }))}
+                    className={`btn btn-outline ${activeLabelStyle.fontWeight === 'bold' ? 'active' : ''}`}
+                    style={{ padding: '0 12px', minWidth: '40px', borderColor: activeLabelStyle.fontWeight === 'bold' ? 'var(--accent-color)' : '' }}
+                    onClick={() => handleStyleChange({ fontWeight: activeLabelStyle.fontWeight === 'bold' ? 'normal' : 'bold' })}
                   >
                     <Bold size={16} />
                   </button>
                   <button
-                    className={`btn btn-outline ${config.labels[0].fontStyle === 'italic' ? 'active' : ''}`}
-                    style={{ padding: '0 12px', minWidth: '40px', borderColor: config.labels[0].fontStyle === 'italic' ? 'var(--accent-color)' : '' }}
-                    onClick={() => updateConfig(c => ({
-                      ...c, labels: [{ ...c.labels[0], fontStyle: c.labels[0].fontStyle === 'italic' ? 'normal' : 'italic' }]
-                    }))}
+                    className={`btn btn-outline ${activeLabelStyle.fontStyle === 'italic' ? 'active' : ''}`}
+                    style={{ padding: '0 12px', minWidth: '40px', borderColor: activeLabelStyle.fontStyle === 'italic' ? 'var(--accent-color)' : '' }}
+                    onClick={() => handleStyleChange({ fontStyle: activeLabelStyle.fontStyle === 'italic' ? 'normal' : 'italic' })}
                   >
                     <Italic size={16} />
                   </button>
@@ -679,22 +743,20 @@ const SidebarControls: React.FC<SidebarControlsProps> = ({
 
               <SliderRow
                 label="Size"
-                value={config.labels[0].fontSizeScale}
+                value={activeLabelStyle.fontSizeScale}
                 min="0.005" max="0.30" step="0.005"
-                onChange={(val: number) => updateConfig(c => ({ ...c, labels: [{ ...c.labels[0], fontSizeScale: val }] }))}
-                onReset={() => updateConfig(c => ({ ...c, labels: [{ ...c.labels[0], fontSizeScale: defaultConfig.labels[0].fontSizeScale }] }))}
+                onChange={(val: number) => handleStyleChange({ fontSizeScale: val })}
+                onReset={() => handleStyleChange({ fontSizeScale: defaultConfig.labels[0].fontSizeScale })}
               />
 
               <div className="control-group">
                 <label className="label">Text Position</label>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                   <GridPositionSelector
-                    value={config.labels[0].position}
-                    onChange={(pos: any) => updateConfig(c => ({
-                      ...c, labels: [{ ...c.labels[0], position: pos }]
-                    }))}
+                    value={activeLabelStyle.position}
+                    onChange={(pos: any) => handleStyleChange({ position: pos })}
                   />
-                  <div style={{ fontSize: '10px', color: 'var(--text-secondary)' }}>{config.labels[0].position}</div>
+                  <div style={{ fontSize: '10px', color: 'var(--text-secondary)' }}>{activeLabelStyle.position}</div>
                 </div>
               </div>
 
@@ -705,10 +767,8 @@ const SidebarControls: React.FC<SidebarControlsProps> = ({
                     type="color"
                     className="input-field"
                     style={{ height: '36px', padding: '2px' }}
-                    value={config.labels[0].color}
-                    onChange={(e) => updateConfig(c => ({
-                      ...c, labels: [{ ...c.labels[0], color: e.target.value }]
-                    }))}
+                    value={activeLabelStyle.color}
+                    onChange={(e) => handleStyleChange({ color: e.target.value })}
                   />
                 </div>
                 <div className="control-group">
@@ -717,34 +777,32 @@ const SidebarControls: React.FC<SidebarControlsProps> = ({
                     type="color"
                     className="input-field"
                     style={{ height: '36px', padding: '2px' }}
-                    value={config.labels[0].strokeColor || '#000000'}
-                    onChange={(e) => updateConfig(c => ({
-                      ...c, labels: [{ ...c.labels[0], strokeColor: e.target.value }]
-                    }))}
+                    value={activeLabelStyle.strokeColor || '#000000'}
+                    onChange={(e) => handleStyleChange({ strokeColor: e.target.value })}
                   />
                 </div>
               </div>
 
               <SliderRow
                 label="Offset X"
-                value={config.labels[0].positionXScale}
+                value={activeLabelStyle.positionXScale}
                 min="-0.5" max="0.5" step="0.005"
-                onChange={(val: number) => updateConfig(c => ({ ...c, labels: [{ ...c.labels[0], positionXScale: val }] }))}
-                onReset={() => updateConfig(c => ({ ...c, labels: [{ ...c.labels[0], positionXScale: 0 }] }))}
+                onChange={(val: number) => handleStyleChange({ positionXScale: val })}
+                onReset={() => handleStyleChange({ positionXScale: 0 })}
               />
               <SliderRow
                 label="Offset Y"
-                value={config.labels[0].positionYScale}
+                value={activeLabelStyle.positionYScale}
                 min="-0.5" max="0.5" step="0.005"
-                onChange={(val: number) => updateConfig(c => ({ ...c, labels: [{ ...c.labels[0], positionYScale: val }] }))}
-                onReset={() => updateConfig(c => ({ ...c, labels: [{ ...c.labels[0], positionYScale: 0 }] }))}
+                onChange={(val: number) => handleStyleChange({ positionYScale: val })}
+                onReset={() => handleStyleChange({ positionYScale: 0 })}
               />
               <SliderRow
                 label="Outline"
-                value={config.labels[0].strokeWidthScale}
+                value={activeLabelStyle.strokeWidthScale}
                 min="0" max="0.02" step="0.001"
-                onChange={(val: number) => updateConfig(c => ({ ...c, labels: [{ ...c.labels[0], strokeWidthScale: val }] }))}
-                onReset={() => updateConfig(c => ({ ...c, labels: [{ ...c.labels[0], strokeWidthScale: defaultConfig.labels[0].strokeWidthScale }] }))}
+                onChange={(val: number) => handleStyleChange({ strokeWidthScale: val })}
+                onReset={() => handleStyleChange({ strokeWidthScale: defaultConfig.labels[0].strokeWidthScale })}
               />
             </div>
           )}

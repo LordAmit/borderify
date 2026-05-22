@@ -18,6 +18,7 @@ export interface ImageItem {
   exif: ExifData;
   rawExifStr?: string | null;
   captionText?: string;
+  captionStyle?: Partial<Omit<TextLabel, 'id' | 'text' | 'show'>>;
 }
 
 export interface LayoutSettings {

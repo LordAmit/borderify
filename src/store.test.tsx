@@ -71,4 +71,51 @@ describe('useStore', () => {
     // Ensure image 2 was not modified
     expect(img2?.captionText).toBeUndefined();
   });
+
+  it('updateImageCaptionStyle specifically updates styling overrides for the correct image', () => {
+    const wrapper = ({ children }: { children: React.ReactNode }) => <StoreProvider>{children}</StoreProvider>;
+    const { result } = renderHook(() => useStore(), { wrapper });
+
+    const mockImage1: ImageItem = { id: '1', file: new File([], '1.jpg'), objectUrl: 'blob:1', width: 100, height: 100, exif: {} };
+    const mockImage2: ImageItem = { id: '2', file: new File([], '2.jpg'), objectUrl: 'blob:2', width: 100, height: 100, exif: {} };
+
+    act(() => {
+      result.current.addImage(mockImage1);
+      result.current.addImage(mockImage2);
+    });
+
+    act(() => {
+      result.current.updateImageCaptionStyle('1', { color: '#ff0000', fontSizeScale: 0.05 });
+    });
+
+    const img1 = result.current.state.images.find(img => img.id === '1');
+    const img2 = result.current.state.images.find(img => img.id === '2');
+
+    expect(img1?.captionStyle?.color).toBe('#ff0000');
+    expect(img1?.captionStyle?.fontSizeScale).toBe(0.05);
+    expect(img2?.captionStyle).toBeUndefined();
+  });
+
+  it('clearAllImageCaptionStyles successfully removes styling overrides from all images', () => {
+    const wrapper = ({ children }: { children: React.ReactNode }) => <StoreProvider>{children}</StoreProvider>;
+    const { result } = renderHook(() => useStore(), { wrapper });
+
+    const mockImage1: ImageItem = { id: '1', file: new File([], '1.jpg'), objectUrl: 'blob:1', width: 100, height: 100, exif: {}, captionStyle: { color: '#ff0000' } };
+    const mockImage2: ImageItem = { id: '2', file: new File([], '2.jpg'), objectUrl: 'blob:2', width: 100, height: 100, exif: {}, captionStyle: { color: '#00ff00' } };
+
+    act(() => {
+      result.current.addImage(mockImage1);
+      result.current.addImage(mockImage2);
+    });
+
+    act(() => {
+      result.current.clearAllImageCaptionStyles();
+    });
+
+    const img1 = result.current.state.images.find(img => img.id === '1');
+    const img2 = result.current.state.images.find(img => img.id === '2');
+
+    expect(img1?.captionStyle).toBeUndefined();
+    expect(img2?.captionStyle).toBeUndefined();
+  });
 });

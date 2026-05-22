@@ -282,10 +282,12 @@ export const renderPhotoBorder = (
   config.labels.forEach((label, index) => {
     const rawText = (index === 0 && image.captionText !== undefined) ? image.captionText : label.text;
     if (!label.show || !rawText) return;
+    const imageStyle = (index === 0 && image.captionStyle) ? image.captionStyle : {};
+    const labelWithOverrides = { ...label, ...imageStyle };
     const text = resolveTemplate(rawText, image.exif);
-    const fontSize = baseLength * label.fontSizeScale;
-    const globalWeight = label.fontWeight || 'normal';
-    const globalStyle = label.fontStyle || 'normal';
+    const fontSize = baseLength * labelWithOverrides.fontSizeScale;
+    const globalWeight = labelWithOverrides.fontWeight || 'normal';
+    const globalStyle = labelWithOverrides.fontStyle || 'normal';
     
     // Parse rich text segments by line
     const rawLines = text.split('\n');
@@ -299,7 +301,7 @@ export const renderPhotoBorder = (
       segments.forEach(seg => {
         const weight = seg.bold ? 'bold' : globalWeight;
         const style = seg.italic ? 'italic' : globalStyle;
-        ctx.font = `${style} ${weight} ${fontSize}px "${label.fontFamily.replace(/"/g, '')}", sans-serif`;
+        ctx.font = `${style} ${weight} ${fontSize}px "${labelWithOverrides.fontFamily.replace(/"/g, '')}", sans-serif`;
         lineWidth += ctx.measureText(seg.text).width;
       });
       return { segments, lineWidth };
@@ -314,11 +316,11 @@ export const renderPhotoBorder = (
     const anchor = getPreciseAnchor(
       cardW, cardH, drawImgH, 
       innerPadTop, innerPadBottom, innerPadSide, 
-      label.position
+      labelWithOverrides.position
     );
 
-    const offsetX = baseLength * (label.positionXScale || 0);
-    const offsetY = baseLength * (label.positionYScale || 0);
+    const offsetX = baseLength * (labelWithOverrides.positionXScale || 0);
+    const offsetY = baseLength * (labelWithOverrides.positionYScale || 0);
 
     let startX = cardX + anchor.x + offsetX;
     if (anchor.align === 'right') startX -= totalW;
@@ -340,14 +342,14 @@ export const renderPhotoBorder = (
       line.segments.forEach(seg => {
         const weight = seg.bold ? 'bold' : globalWeight;
         const style = seg.italic ? 'italic' : globalStyle;
-        ctx.font = `${style} ${weight} ${fontSize}px "${label.fontFamily.replace(/"/g, '')}", sans-serif`;
+        ctx.font = `${style} ${weight} ${fontSize}px "${labelWithOverrides.fontFamily.replace(/"/g, '')}", sans-serif`;
         
-        if (label.strokeWidthScale > 0) {
-          ctx.lineWidth = baseLength * label.strokeWidthScale;
-          ctx.strokeStyle = label.strokeColor;
+        if (labelWithOverrides.strokeWidthScale > 0) {
+          ctx.lineWidth = baseLength * labelWithOverrides.strokeWidthScale;
+          ctx.strokeStyle = labelWithOverrides.strokeColor;
           ctx.strokeText(seg.text, currentX, currentY);
         }
-        ctx.fillStyle = label.color;
+        ctx.fillStyle = labelWithOverrides.color;
         ctx.fillText(seg.text, currentX, currentY);
         currentX += ctx.measureText(seg.text).width;
       });

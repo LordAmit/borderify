@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useState, useCallback } from 'react';
 import type { ReactNode } from 'react';
-import type { AppState, AppConfig, ImageItem } from './types';
+import type { AppState, AppConfig, ImageItem, TextLabel } from './types';
 
 export const defaultConfig: AppConfig = {
   layout: {
@@ -85,6 +85,8 @@ interface StoreContextType {
   setActiveImage: (id: string | null) => void;
   clearAllImages: () => void;
   updateImageCaption: (id: string, text: string) => void;
+  updateImageCaptionStyle: (id: string, style: Partial<Omit<TextLabel, 'id' | 'text' | 'show'>>) => void;
+  clearAllImageCaptionStyles: () => void;
 }
 
 const StoreContext = createContext<StoreContextType | undefined>(undefined);
@@ -135,9 +137,41 @@ export const StoreProvider: React.FC<{ children: ReactNode }> = ({ children }) =
       images: prev.images.map(img => img.id === id ? { ...img, captionText: text } : img)
     }));
   };
+  const updateImageCaptionStyle = (id: string, style: Partial<Omit<TextLabel, 'id' | 'text' | 'show'>>) => {
+    setState(prev => ({
+      ...prev,
+      images: prev.images.map(img => img.id === id ? {
+        ...img,
+        captionStyle: {
+          ...(img.captionStyle || {}),
+          ...style
+        }
+      } : img)
+    }));
+  };
+  const clearAllImageCaptionStyles = () => {
+    setState(prev => ({
+      ...prev,
+      images: prev.images.map(img => {
+        const { captionStyle, ...rest } = img;
+        return rest;
+      })
+    }));
+  };
 
   return (
-    <StoreContext.Provider value={{ state, setState, updateConfig, addImage, removeImage, setActiveImage, clearAllImages, updateImageCaption }}>
+    <StoreContext.Provider value={{
+      state,
+      setState,
+      updateConfig,
+      addImage,
+      removeImage,
+      setActiveImage,
+      clearAllImages,
+      updateImageCaption,
+      updateImageCaptionStyle,
+      clearAllImageCaptionStyles
+    }}>
       {children}
     </StoreContext.Provider>
   );
