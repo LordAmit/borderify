@@ -75,3 +75,4 @@ dist-ssr/
 .DS_Store
 Thumbs.db
 dist/index.html
+node_modules/.vite/vitest
