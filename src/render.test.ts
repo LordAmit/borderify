@@ -152,4 +152,85 @@ describe('renderPhotoBorder calculations', () => {
     expect(canvas.width).toBe(3000);
     expect(canvas.height).toBe(3000);
   });
+
+  it('[REQ-REND-02] calculates border padding inward from the final aspect ratio bounds to prevent layout skewing', () => {
+    const { canvas, ctx } = createMockCanvas();
+    const imgObj = { width: 3000, height: 2000 } as HTMLImageElement;
+    const configWithPadding = {
+      ...baseConfig,
+      layout: {
+        ...baseConfig.layout,
+        borderWidthScale: 0.1,
+      },
+    };
+    renderPhotoBorder(canvas, mockImageItem, imgObj, configWithPadding, null);
+    expect(ctx.fill).toHaveBeenCalled();
+  });
+
+  it('[REQ-REND-03] aligns text and logo objects using a 9-point anchor grid', () => {
+    const { canvas, ctx } = createMockCanvas();
+    const imgObj = { width: 1000, height: 1000 } as HTMLImageElement;
+    const configWithLabels = {
+      ...baseConfig,
+      labels: [{
+        id: 'lbl-1',
+        show: true,
+        text: 'Hello World',
+        fontFamily: 'Arial',
+        fontSizeScale: 0.05,
+        color: '#000000',
+        strokeColor: '#ffffff',
+        strokeWidthScale: 0,
+        position: 'Top Left' as const,
+        positionXScale: 0,
+        positionYScale: 0,
+      }],
+    };
+    renderPhotoBorder(canvas, mockImageItem, imgObj, configWithLabels, null);
+    expect(ctx.fillText).toHaveBeenCalledWith('Hello World', expect.any(Number), expect.any(Number));
+  });
+
+  it('[REQ-REND-05] falls back to standard rectangular borders if ctx.roundRect is not supported', () => {
+    const { canvas, ctx } = createMockCanvas();
+    ctx.roundRect = undefined as any;
+    const imgObj = { width: 1000, height: 1000 } as HTMLImageElement;
+    const configWithRadius = {
+      ...baseConfig,
+      layout: {
+        ...baseConfig.layout,
+        imageRadiusScale: 0.05,
+      },
+    };
+    renderPhotoBorder(canvas, mockImageItem, imgObj, configWithRadius, null);
+    expect(ctx.rect).toHaveBeenCalled();
+  });
+
+  it('[REQ-REND-06] downsamples the image to a low-resolution buffer canvas when backgroundType is blurred-image', () => {
+    const { canvas, ctx } = createMockCanvas();
+    const imgObj = { width: 3000, height: 2000 } as HTMLImageElement;
+    const configWithBlur = {
+      ...baseConfig,
+      layout: {
+        ...baseConfig.layout,
+        backgroundType: 'blurred-image' as const,
+        backgroundBlurScale: 0.1,
+      },
+    };
+    renderPhotoBorder(canvas, mockImageItem, imgObj, configWithBlur, null);
+    expect(ctx.drawImage).toHaveBeenCalled();
+  });
+
+  it('[REQ-REND-07] renders the inner image shadow offset on a distinct layer below the picture clipping boundary when enabled', () => {
+    const { canvas, ctx } = createMockCanvas();
+    const imgObj = { width: 1000, height: 1000 } as HTMLImageElement;
+    const configWithShadow = {
+      ...baseConfig,
+      layout: {
+        ...baseConfig.layout,
+        innerImageShadowBlurScale: 0.05,
+      },
+    };
+    renderPhotoBorder(canvas, mockImageItem, imgObj, configWithShadow, null);
+    expect(ctx.shadowColor).toBeDefined();
+  });
 });

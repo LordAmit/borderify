@@ -20,6 +20,13 @@ vi.mock('piexifjs', () => ({
 }));
 
 describe('extractExif', () => {
+  it('[REQ-EXIF-01] loads local image files entirely on the client side via the browser File API', async () => {
+    const file = new File(['mock content'], 'photo.jpg', { type: 'image/jpeg' });
+    (exifr.parse as any).mockResolvedValue({ Make: 'Canon' });
+    const result = await extractExif(file);
+    expect(result.make).toBe('Canon');
+  });
+
   it('[REQ-EXIF-02] verifies the shutter speed fraction conversion', async () => {
     (exifr.parse as any).mockResolvedValue({ ExposureTime: 0.005 });
     const result = await extractExif(new File([], 'test.jpg'));
@@ -31,6 +38,22 @@ describe('extractExif', () => {
     (exifr.parse as any).mockResolvedValue({ DateTimeOriginal: testDate });
     const result = await extractExif(new File([], 'test.jpg'));
     expect(result.date).toBe(testDate.toLocaleDateString());
+  });
+
+  it('[REQ-EXIF-04] executes EXIF extraction to populate the exif object', async () => {
+    (exifr.parse as any).mockResolvedValue({ Make: 'Nikon', Model: 'Z6' });
+    const result = await extractExif(new File([], 'test.jpg'));
+    expect(result.make).toBe('Nikon');
+    expect(result.model).toBe('Z6');
+  });
+
+  it('[REQ-EXIF-05] if an image file is corrupt or cannot be parsed, it logs warning and returns {}', async () => {
+    const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
+    (exifr.parse as any).mockRejectedValue(new Error('Corrupt file'));
+    const result = await extractExif(new File([], 'corrupt.jpg'));
+    expect(result).toEqual({});
+    expect(warnSpy).toHaveBeenCalled();
+    warnSpy.mockRestore();
   });
 
   it('[REQ-EXIF-06] safely returns an empty {} object without crashing when an image contains absolutely no EXIF data', async () => {

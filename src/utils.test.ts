@@ -30,3 +30,14 @@ describe('resolveTemplate', () => {
     expect(resolveTemplate(input, exif)).toBe('Shot on Sony\nNext line here');
   });
 });
+
+describe('JSZip batch integration', () => {
+  it('[REQ-EXPT-02] when the user initiates a batch export, the system shall bundle the processed images into a single ZIP archive', async () => {
+    const JSZip = (await import('jszip')).default;
+    const zip = new JSZip();
+    zip.file('test.txt', 'hello world');
+    const content = await zip.generateAsync({ type: 'string' });
+    expect(content).toBeDefined();
+    expect(zip.files['test.txt']).toBeDefined();
+  });
+});

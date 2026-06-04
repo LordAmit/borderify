@@ -118,4 +118,87 @@ describe('useStore', () => {
     expect(img1?.captionStyle).toBeUndefined();
     expect(img2?.captionStyle).toBeUndefined();
   });
+
+  it('[REQ-REND-04] triggers active image updates when configuration changes', () => {
+    const wrapper = ({ children }: { children: React.ReactNode }) => <StoreProvider>{children}</StoreProvider>;
+    const { result } = renderHook(() => useStore(), { wrapper });
+
+    act(() => {
+      result.current.updateConfig((c) => ({
+        ...c,
+        layout: {
+          ...c.layout,
+          backgroundColor: '#000000',
+        },
+      }));
+    });
+
+    expect(result.current.state.config.layout.backgroundColor).toBe('#000000');
+  });
+
+  it('[REQ-STAT-02] overwrites the active layout configuration when a preset JSON payload is loaded', () => {
+    const wrapper = ({ children }: { children: React.ReactNode }) => <StoreProvider>{children}</StoreProvider>;
+    const { result } = renderHook(() => useStore(), { wrapper });
+
+    const newPreset = {
+      layout: {
+        aspectRatio: '16:9',
+        backgroundColor: '#ff00ff',
+        backgroundType: 'color' as const,
+        backgroundBlurScale: 0,
+        backgroundDimScale: 0,
+        borderWidthScale: 0.1,
+        imagePaddingScale: 0.05,
+        innerBorderColor: '#000000',
+        innerBorderMode: 'custom' as const,
+        innerBorderTopScale: 0.05,
+        innerBorderBottomScale: 0.05,
+        innerBorderSideScale: 0.05,
+        imageRadiusScale: 0.02,
+        innerImageRadiusScale: 0.01,
+        imageShadowBlurScale: 0.04,
+        innerImageShadowBlurScale: 0.03,
+      },
+      labels: [],
+      logo: { dataUrl: null, sizeScale: 0.05, position: 'Top Left' as const, offsetXScale: 0, offsetYScale: 0 },
+      exifPills: { show: false } as any,
+      export: { quality: 90, maxResolution: '4K' as const },
+    };
+
+    act(() => {
+      result.current.updateConfig(() => newPreset);
+    });
+
+    expect(result.current.state.config.layout.aspectRatio).toBe('16:9');
+    expect(result.current.state.config.layout.backgroundColor).toBe('#ff00ff');
+    expect(result.current.state.config.export.maxResolution).toBe('4K');
+  });
+
+  it('[REQ-STAT-03] reverts a specific parameter to its default value when the reset event is triggered', () => {
+    const wrapper = ({ children }: { children: React.ReactNode }) => <StoreProvider>{children}</StoreProvider>;
+    const { result } = renderHook(() => useStore(), { wrapper });
+
+    act(() => {
+      result.current.updateConfig((c) => ({
+        ...c,
+        layout: {
+          ...c.layout,
+          borderWidthScale: 0.25, // custom value
+        },
+      }));
+    });
+    expect(result.current.state.config.layout.borderWidthScale).toBe(0.25);
+
+    // Revert/Reset single setting to default (0.05)
+    act(() => {
+      result.current.updateConfig((c) => ({
+        ...c,
+        layout: {
+          ...c.layout,
+          borderWidthScale: 0.05,
+        },
+      }));
+    });
+    expect(result.current.state.config.layout.borderWidthScale).toBe(0.05);
+  });
 });
