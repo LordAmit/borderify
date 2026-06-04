@@ -13,6 +13,7 @@ Before modifying any source code, you MUST read and conform to the project speci
 
 ## Code Modification Rules
 
+*   **Mandatory Plan Verification:** You MUST present a clear implementation plan detailing exactly what files you intend to create or modify, and obtain the user's explicit approval BEFORE taking any modifying action or writing code. Asking a clarifying or investigatory question does not authorize you to execute changes.
 *   **No Spec Drift:** You must only write code that satisfies the EARS requirements defined in `.specify/specify.md`. If a feature requires new behavior, request the user to define it in the specifications first.
 *   **Write Clean Types:** Match type boundaries defined in `src/types.ts`.
 *   **No Framework Alterations:** Use Vanilla CSS only. Do not add Tailwind CSS or other utility libraries.
