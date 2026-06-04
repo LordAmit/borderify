@@ -20,20 +20,20 @@ vi.mock('piexifjs', () => ({
 }));
 
 describe('extractExif', () => {
-  it('verifies the shutter speed fraction conversion', async () => {
+  it('[REQ-EXIF-02] verifies the shutter speed fraction conversion', async () => {
     (exifr.parse as any).mockResolvedValue({ ExposureTime: 0.005 });
     const result = await extractExif(new File([], 'test.jpg'));
     expect(result.exposureTime).toBe('1/200');
   });
 
-  it('verifies date parsing fallback logic', async () => {
+  it('[REQ-EXIF-02] verifies date parsing fallback logic', async () => {
     const testDate = new Date('2023-01-01T12:00:00Z');
     (exifr.parse as any).mockResolvedValue({ DateTimeOriginal: testDate });
     const result = await extractExif(new File([], 'test.jpg'));
     expect(result.date).toBe(testDate.toLocaleDateString());
   });
 
-  it('safely returns an empty {} object without crashing when an image contains absolutely no EXIF data', async () => {
+  it('[REQ-EXIF-06] safely returns an empty {} object without crashing when an image contains absolutely no EXIF data', async () => {
     (exifr.parse as any).mockResolvedValue(undefined);
     const result = await extractExif(new File([], 'test.png'));
     expect(result).toEqual({});
@@ -50,7 +50,7 @@ describe('exportImageWithExif', () => {
     global.fetch = vi.fn().mockResolvedValue({ blob: () => Promise.resolve(new Blob()) });
   });
 
-  it('strictly preserves the original EXIF without modifying it', async () => {
+  it('[REQ-EXPT-04] strictly preserves the original EXIF without modifying it', async () => {
     const mockRawExifStr = 'mockRawExifStr';
     (piexif.insert as any).mockReturnValue('newImageWithExif');
 
@@ -62,13 +62,13 @@ describe('exportImageWithExif', () => {
     expect(piexif.insert).toHaveBeenCalledWith(mockRawExifStr, 'data:image/jpeg;base64,mockdata');
   });
 
-  it('exports cleanly if there is no original EXIF data', async () => {
+  it('[REQ-EXPT-01] exports cleanly if there is no original EXIF data', async () => {
     await exportImageWithExif(mockCanvas, { rawExifStr: null, exif: {} } as any);
 
     expect(piexif.insert).not.toHaveBeenCalled();
   });
 
-  it('properly passes custom quality settings down to the canvas toDataURL method', async () => {
+  it('[REQ-EXPT-01] properly passes custom quality settings down to the canvas toDataURL method', async () => {
     const quality = 0.85;
     await exportImageWithExif(mockCanvas, { rawExifStr: null, exif: {} } as any, quality);
 

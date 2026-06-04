@@ -5,7 +5,7 @@ import React from 'react';
 import type { ImageItem } from './types';
 
 describe('useStore', () => {
-  it('addImage correctly appends to the image array and sets the active image', () => {
+  it('[REQ-EXIF-03] addImage correctly appends to the image array and sets the active image', () => {
     const wrapper = ({ children }: { children: React.ReactNode }) => <StoreProvider>{children}</StoreProvider>;
     const { result } = renderHook(() => useStore(), { wrapper });
 
@@ -28,7 +28,7 @@ describe('useStore', () => {
     expect(result.current.state.activeImageId).toBe('1');
   });
 
-  it('updateConfig successfully deep-merges configuration updates', () => {
+  it('[REQ-STAT-01] updateConfig successfully deep-merges configuration updates', () => {
     const wrapper = ({ children }: { children: React.ReactNode }) => <StoreProvider>{children}</StoreProvider>;
     const { result } = renderHook(() => useStore(), { wrapper });
 
@@ -48,7 +48,7 @@ describe('useStore', () => {
     expect(result.current.state.config.layout.innerBorderTopScale).toBe(initialConfig.layout.innerBorderTopScale);
   });
 
-  it('updateImageCaption specifically updates the caption for the correct image', () => {
+  it('[REQ-STAT-01] updateImageCaption specifically updates the caption for the correct image', () => {
     const wrapper = ({ children }: { children: React.ReactNode }) => <StoreProvider>{children}</StoreProvider>;
     const { result } = renderHook(() => useStore(), { wrapper });
 
@@ -72,7 +72,7 @@ describe('useStore', () => {
     expect(img2?.captionText).toBeUndefined();
   });
 
-  it('updateImageCaptionStyle specifically updates styling overrides for the correct image', () => {
+  it('[REQ-STAT-01] updateImageCaptionStyle specifically updates styling overrides for the correct image', () => {
     const wrapper = ({ children }: { children: React.ReactNode }) => <StoreProvider>{children}</StoreProvider>;
     const { result } = renderHook(() => useStore(), { wrapper });
 
@@ -96,7 +96,7 @@ describe('useStore', () => {
     expect(img2?.captionStyle).toBeUndefined();
   });
 
-  it('clearAllImageCaptionStyles successfully removes styling overrides from all images', () => {
+  it('[REQ-STAT-01] clearAllImageCaptionStyles successfully removes styling overrides from all images', () => {
     const wrapper = ({ children }: { children: React.ReactNode }) => <StoreProvider>{children}</StoreProvider>;
     const { result } = renderHook(() => useStore(), { wrapper });
 

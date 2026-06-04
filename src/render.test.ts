@@ -97,7 +97,7 @@ describe('renderPhotoBorder calculations', () => {
     },
   };
 
-  it('keeps original dimensions if under standard maxRes', () => {
+  it('[REQ-REND-01] keeps original dimensions if under standard maxRes', () => {
     const { canvas } = createMockCanvas();
     const imgObj = { width: 3000, height: 2000 } as HTMLImageElement;
 
@@ -108,7 +108,7 @@ describe('renderPhotoBorder calculations', () => {
     expect(canvas.height).toBe(2000);
   });
 
-  it('correctly applies resolution limit capping (downscaling)', () => {
+  it('[REQ-EXPT-03] correctly applies resolution limit capping (downscaling)', () => {
     const { canvas } = createMockCanvas();
     const imgObj = { width: 5000, height: 2500 } as HTMLImageElement; // 2:1 aspect ratio
 
@@ -121,7 +121,7 @@ describe('renderPhotoBorder calculations', () => {
     expect(canvas.height).toBe(1000);
   });
 
-  it('fully protects against upscaling (no expansion of small photos)', () => {
+  it('[REQ-EXPT-03] fully protects against upscaling (no expansion of small photos)', () => {
     const { canvas } = createMockCanvas();
     const imgObj = { width: 600, height: 400 } as HTMLImageElement;
 
@@ -133,7 +133,7 @@ describe('renderPhotoBorder calculations', () => {
     expect(canvas.height).toBe(400);
   });
 
-  it('scales correctly based on target aspect ratio overrides', () => {
+  it('[REQ-REND-01] scales correctly based on target aspect ratio overrides', () => {
     const { canvas } = createMockCanvas();
     const imgObj = { width: 3000, height: 2000 } as HTMLImageElement; // 3:2 original ratio
     
