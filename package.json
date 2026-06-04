@@ -11,6 +11,7 @@
     "test": "vitest",
     "verify-specs": "node .specify/scripts/verify-traceability.js",
     "lint-specs": "node .specify/scripts/lint-specs.js",
+    "check-spec-drift": "node .specify/scripts/check-spec-drift.js",
     "prepare": "git config core.hooksPath .specify/hooks"
   },
   "dependencies": {
