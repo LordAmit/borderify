@@ -29,6 +29,12 @@ jobs:
     - name: Check Linting
       run: npm run lint
 
+    - name: Lint Specifications (EARS Syntax)
+      run: npm run lint-specs
+
+    - name: Verify Specification Traceability
+      run: npm run verify-specs
+
     - name: Run Tests
       run: npm run test -- --run
 
