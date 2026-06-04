@@ -6,14 +6,32 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const projectRoot = path.resolve(__dirname, '../..');
 
+function getSpecFiles(dir, files = []) {
+  const list = fs.readdirSync(dir);
+  for (const file of list) {
+    const fullPath = path.join(dir, file);
+    const stat = fs.statSync(fullPath);
+    if (stat.isDirectory()) {
+      if (file !== 'node_modules' && file !== '.git' && file !== 'dist') {
+        getSpecFiles(fullPath, files);
+      }
+    } else if (file.endsWith('.spec.md')) {
+      files.push(fullPath);
+    }
+  }
+  return files;
+}
+
 function getRequirements() {
-  const specPath = path.join(projectRoot, '.specify/specify.md');
-  const content = fs.readFileSync(specPath, 'utf-8');
-  
-  // Matches e.g. [REQ-EXIF-01]
-  const regex = /\[REQ-[A-Z]+-\d+\]/g;
-  const matches = content.match(regex) || [];
-  return [...new Set(matches)]; // De-duplicate
+  const specFiles = getSpecFiles(path.join(projectRoot, 'src'));
+  let allReqs = [];
+  for (const file of specFiles) {
+    const content = fs.readFileSync(file, 'utf-8');
+    const regex = /\[REQ-[A-Z]+-\d+\]/g;
+    const matches = content.match(regex) || [];
+    allReqs.push(...matches);
+  }
+  return [...new Set(allReqs)];
 }
 
 function getTestFiles(dir, files = []) {
@@ -39,7 +57,7 @@ function verifyTraceability() {
   // Read all test files content
   const combinedTestContent = testFiles.map(file => fs.readFileSync(file, 'utf-8')).join('\n');
   
-  console.log(`\n🔍 Found ${reqs.length} requirements in specify.md.`);
+  console.log(`\n🔍 Found ${reqs.length} requirements in colocated spec files.`);
   console.log(`📂 Scanned ${testFiles.length} test files for trace IDs.`);
   
   const missing = [];

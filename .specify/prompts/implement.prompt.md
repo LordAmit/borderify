@@ -7,7 +7,7 @@ You are an AI software engineering assistant working on **Borderify**. This proj
 Before modifying any source code, you MUST read and conform to the project specifications:
 
 1.  **Read the Constitution:** Review `.specify/memory/constitution.md`. You must adhere to the tech stack (React + TypeScript + Vite + Vanilla CSS) and safety rules (e.g., NEVER trigger deployments).
-2.  **Read the Specifications:** Review `.specify/specify.md` to understand the functional behavior required for the task.
+2.  **Read the Specifications:** Review the corresponding `*.spec.md` file colocated next to the source code you are modifying (e.g. `src/render.spec.md` for rendering changes) to understand the EARS requirements.
 3.  **Read the Plan:** Review `.specify/plan.md` to see the component architecture and file layout.
 4.  **Confirm the Task:** Look at the active task definition in `.specify/tasks.md` (or `.specify/tasks/task-xxx.md`).
 
