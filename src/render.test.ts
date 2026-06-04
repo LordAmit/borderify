@@ -20,6 +20,7 @@ describe('renderPhotoBorder calculations', () => {
       measureText: vi.fn().mockReturnValue({ width: 50 }),
       clip: vi.fn(),
       rect: vi.fn(),
+      shadowColor: '',
     };
 
     return {
