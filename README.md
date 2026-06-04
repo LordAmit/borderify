@@ -58,21 +58,22 @@ When processing extremely large RAW files or very high-resolution images in batc
 
 ## Disclaimer 
 
-This project was entirely vibe coded using **Google Antigravity** and **Gemini 3.0 Pro/Flash**. 
+This project was initially vibe coded using **Google Antigravity** and **Gemini 3.0 Pro/Flash**.
 
-This does not mean I do not know what I am doing, or at least what I wanted to achieve through vibe coding, since I have industry experience and academic background in software engineering. 
+This does not mean I did not know what I was doing, or at least what I wanted to achieve through vibe coding, since I have over a decade of combined experience from industry, academic background and software engineering research. 
 However, I don't have experience in web tech as a stack nor do I have the time to develop my skills in it. 
-So in the unlikely case that you find a bug in this app, I will probably attempt to solve it through vibe coding anyway, since I have no idea what the code means, or is doing. 
-In other words, use at your own risk. 
-It is unlikely that it will 
- 
+Later, I learned more about AI-driven software engineering and resturctured the repository to reflect some of the recent AI-driven software engineering practices, such as Spec Driven Development, Behavior Defined Testing and Agent Governnance.
+
+In the unlikely case that you find a bug in this app, I will probably attempt to solve it through AI-assisted coding. 
+
+Regardless, use at your own risk. As far as the specification goes, it does NOT: 
+
   - collect data
   - corrupt local documents
   - corrupt your photos
   - harm you in anyway
-  
-  unless Gemini decided to add those features without telling me. That is still unlikely since websites are sandboxed in a browser, usually. 
 
+In other words, it is a free app as in free beer, literally. The only reason I have google analytics enabled for the web app hosted in my website is to get an aggregated estimation about the number of users. 
 
 ## License
 
