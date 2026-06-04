@@ -8,7 +8,9 @@
     "build": "tsc -b && vite build",
     "lint": "eslint .",
     "preview": "vite preview",
-    "test": "vitest"
+    "test": "vitest",
+    "verify-specs": "node .specify/scripts/verify-traceability.js",
+    "lint-specs": "node .specify/scripts/lint-specs.js"
   },
   "dependencies": {
     "@types/piexifjs": "^1.0.0",
