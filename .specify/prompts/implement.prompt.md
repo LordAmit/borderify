@@ -18,3 +18,9 @@ Before modifying any source code, you MUST read and conform to the project speci
 *   **Write Clean Types:** Match type boundaries defined in `src/types.ts`.
 *   **No Framework Alterations:** Use Vanilla CSS only. Do not add Tailwind CSS or other utility libraries.
 *   **Unit Tests:** For every feature or behavior change, you must write/update tests matching the EARS requirement IDs (e.g. `[REQ-EXIF-01]`).
+
+## Token & Context Optimization Rules
+
+*   **Need-to-Know File Access:** Do not load or read files that are unrelated to the current task.
+*   **Use Line-Range Reads:** When reading code files, use the `StartLine` and `EndLine` parameters of the `view_file` tool to inspect only the relevant blocks of code. Do not load the entire file into your context window unless absolutely necessary.
+*   **Targeted Code Search:** Use `grep_search` to find symbols and keywords instead of running wide directory scans (`list_dir`) on source folders.

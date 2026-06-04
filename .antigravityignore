@@ -1,0 +1,17 @@
+# Antigravity Agent Exclusions (Token Optimization)
+
+# Dependencies and Builds
+node_modules/
+dist/
+dist-ssr/
+build/
+coverage/
+.nyc_output/
+
+# IDE Caches
+.idea/
+.vscode/
+
+# OS Files
+.DS_Store
+Thumbs.db
