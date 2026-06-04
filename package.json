@@ -10,7 +10,8 @@
     "preview": "vite preview",
     "test": "vitest",
     "verify-specs": "node .specify/scripts/verify-traceability.js",
-    "lint-specs": "node .specify/scripts/lint-specs.js"
+    "lint-specs": "node .specify/scripts/lint-specs.js",
+    "prepare": "git config core.hooksPath .specify/hooks"
   },
   "dependencies": {
     "@types/piexifjs": "^1.0.0",
