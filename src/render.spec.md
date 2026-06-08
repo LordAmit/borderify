@@ -16,3 +16,9 @@ This document contains the functional requirements for canvas bounds calculation
 ### Optional Requirements
 *   **[REQ-REND-06]** Where background type is set to `blurred-image`, the system shall downsample the image to a low-resolution buffer canvas, apply the canvas blur filter, and upscale the blurred result back to the main canvas to prevent mobile memory exhaustion.
 *   **[REQ-REND-07]** Where inner image shadows are enabled, the system shall render the shadow offset on a distinct layer below the picture clipping boundary.
+*   **[REQ-REND-08]** Where label stroke overrides are enabled, the system shall render text outlines using the specified stroke color and width scale.
+*   **[REQ-REND-09]** Where inner image radius scale is enabled, the system shall draw the inner photo using a rounded clipping path to round its corners.
+*   **[REQ-REND-10]** Where a brand logo is provided, the system shall scale it proportionally and render it onto the canvas at the designated position.
+*   **[REQ-REND-11]** Where inner card radius scale is enabled and the browser supports `ctx.roundRect`, the system shall render the inner card with rounded corners.
+*   **[REQ-REND-12]** Where outer card shadows are enabled, the system shall render the shadow offset and blur below the inner card.
+*   **[REQ-REND-13]** Where EXIF pills are enabled and EXIF metadata is present, the system shall format and render EXIF parameter labels inside pill boxes on the canvas.

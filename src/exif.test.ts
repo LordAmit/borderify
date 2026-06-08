@@ -61,6 +61,33 @@ describe('extractExif', () => {
     const result = await extractExif(new File([], 'test.png'));
     expect(result).toEqual({});
   });
+
+  it('[REQ-EXIF-02] handles non-string cleanStr parameter inputs safely', async () => {
+    (exifr.parse as any).mockResolvedValue({ Make: null, Model: undefined });
+    const result = await extractExif(new File([], 'test.jpg'));
+    expect(result.make).toBeNull();
+    expect(result.model).toBeUndefined();
+  });
+
+  it('[REQ-EXIF-02] handles exposure times equal to or greater than 1 second correctly', async () => {
+    (exifr.parse as any).mockResolvedValue({ ExposureTime: 2.5 });
+    const result = await extractExif(new File([], 'test.jpg'));
+    expect(result.exposureTime).toBe(2.5);
+  });
+
+  it('[REQ-EXIF-02] handles invalid date values gracefully without throwing', async () => {
+    (exifr.parse as any).mockResolvedValue({ DateTimeOriginal: 'not-a-date' });
+    const result = await extractExif(new File([], 'test.jpg'));
+    expect(result.date).toBeUndefined();
+  });
+
+  it('[REQ-EXIF-02] parses focalLength, fNumber, and ISO when they are present', async () => {
+    (exifr.parse as any).mockResolvedValue({ FocalLength: 50, FNumber: 1.8, ISO: 100 });
+    const result = await extractExif(new File([], 'test.jpg'));
+    expect(result.focalLength).toBe(50);
+    expect(result.fNumber).toBe(1.8);
+    expect(result.iso).toBe(100);
+  });
 });
 
 describe('exportImageWithExif', () => {
@@ -96,5 +123,19 @@ describe('exportImageWithExif', () => {
     await exportImageWithExif(mockCanvas, { rawExifStr: null, exif: {} } as any, quality);
 
     expect(mockCanvas.toDataURL).toHaveBeenCalledWith('image/jpeg', 0.85);
+  });
+
+  it('[REQ-EXPT-01] falls back to exporting without EXIF and logs error if EXIF insertion fails', async () => {
+    const errorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+    const mockRawExifStr = 'mockRawExifStr';
+    (piexif.insert as any).mockImplementation(() => {
+      throw new Error('Insert failed');
+    });
+
+    const result = await exportImageWithExif(mockCanvas, { rawExifStr: mockRawExifStr, exif: {} } as any);
+
+    expect(result).toBeDefined();
+    expect(errorSpy).toHaveBeenCalled();
+    errorSpy.mockRestore();
   });
 });

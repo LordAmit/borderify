@@ -201,4 +201,84 @@ describe('useStore', () => {
     });
     expect(result.current.state.config.layout.borderWidthScale).toBe(0.05);
   });
+
+  it('[REQ-STAT-04] removeImage removes the correct image and updates activeImageId if necessary', () => {
+    const wrapper = ({ children }: { children: React.ReactNode }) => <StoreProvider>{children}</StoreProvider>;
+    const { result } = renderHook(() => useStore(), { wrapper });
+
+    const mockImage1: ImageItem = { id: '1', file: new File([], '1.jpg'), objectUrl: 'blob:1', width: 100, height: 100, exif: {} };
+    const mockImage2: ImageItem = { id: '2', file: new File([], '2.jpg'), objectUrl: 'blob:2', width: 100, height: 100, exif: {} };
+
+    act(() => {
+      result.current.addImage(mockImage1);
+      result.current.addImage(mockImage2);
+    });
+
+    expect(result.current.state.images).toHaveLength(2);
+    expect(result.current.state.activeImageId).toBe('1');
+
+    // Remove active image '1' -> active image should become the next one ('2')
+    act(() => {
+      result.current.removeImage('1');
+    });
+
+    expect(result.current.state.images).toHaveLength(1);
+    expect(result.current.state.images[0].id).toBe('2');
+    expect(result.current.state.activeImageId).toBe('2');
+
+    // Remove the remaining image '2' -> active image should become null
+    act(() => {
+      result.current.removeImage('2');
+    });
+
+    expect(result.current.state.images).toHaveLength(0);
+    expect(result.current.state.activeImageId).toBeNull();
+  });
+
+  it('[REQ-STAT-05] setActiveImage correctly updates the active image ID', () => {
+    const wrapper = ({ children }: { children: React.ReactNode }) => <StoreProvider>{children}</StoreProvider>;
+    const { result } = renderHook(() => useStore(), { wrapper });
+
+    const mockImage1: ImageItem = { id: '1', file: new File([], '1.jpg'), objectUrl: 'blob:1', width: 100, height: 100, exif: {} };
+    const mockImage2: ImageItem = { id: '2', file: new File([], '2.jpg'), objectUrl: 'blob:2', width: 100, height: 100, exif: {} };
+
+    act(() => {
+      result.current.addImage(mockImage1);
+      result.current.addImage(mockImage2);
+    });
+
+    expect(result.current.state.activeImageId).toBe('1');
+
+    act(() => {
+      result.current.setActiveImage('2');
+    });
+
+    expect(result.current.state.activeImageId).toBe('2');
+
+    act(() => {
+      result.current.setActiveImage(null);
+    });
+
+    expect(result.current.state.activeImageId).toBeNull();
+  });
+
+  it('[REQ-STAT-06] clearAllImages clears the image queue and sets activeImageId to null', () => {
+    const wrapper = ({ children }: { children: React.ReactNode }) => <StoreProvider>{children}</StoreProvider>;
+    const { result } = renderHook(() => useStore(), { wrapper });
+
+    const mockImage1: ImageItem = { id: '1', file: new File([], '1.jpg'), objectUrl: 'blob:1', width: 100, height: 100, exif: {} };
+    act(() => {
+      result.current.addImage(mockImage1);
+    });
+
+    expect(result.current.state.images).toHaveLength(1);
+    expect(result.current.state.activeImageId).toBe('1');
+
+    act(() => {
+      result.current.clearAllImages();
+    });
+
+    expect(result.current.state.images).toHaveLength(0);
+    expect(result.current.state.activeImageId).toBeNull();
+  });
 });

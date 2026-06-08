@@ -1,6 +1,8 @@
 import { describe, it, expect, vi } from 'vitest';
 import { renderPhotoBorder } from './render';
 import type { AppConfig, ImageItem } from './types';
+import fs from 'fs';
+import path from 'path';
 
 describe('renderPhotoBorder calculations', () => {
   const createMockCanvas = () => {
@@ -21,6 +23,7 @@ describe('renderPhotoBorder calculations', () => {
       clip: vi.fn(),
       rect: vi.fn(),
       shadowColor: '',
+      strokeText: vi.fn(),
     };
 
     return {
@@ -233,5 +236,173 @@ describe('renderPhotoBorder calculations', () => {
     };
     renderPhotoBorder(canvas, mockImageItem, imgObj, configWithShadow, null);
     expect(ctx.shadowColor).toBeDefined();
+  });
+
+  it('[REQ-REND-08] renders text outlines using the specified stroke color and width scale when enabled', () => {
+    const { canvas, ctx } = createMockCanvas();
+    const imgObj = { width: 1000, height: 1000 } as HTMLImageElement;
+    const configWithStroke = {
+      ...baseConfig,
+      labels: [{
+        id: 'lbl-1',
+        show: true,
+        text: 'Outline Text',
+        fontFamily: 'Arial',
+        fontSizeScale: 0.05,
+        color: '#000000',
+        strokeColor: '#ff0000',
+        strokeWidthScale: 0.02,
+        position: 'Top Left' as const,
+        positionXScale: 0,
+        positionYScale: 0,
+      }],
+    };
+    renderPhotoBorder(canvas, mockImageItem, imgObj, configWithStroke, null);
+    expect(ctx.strokeText).toHaveBeenCalledWith('Outline Text', expect.any(Number), expect.any(Number));
+  });
+
+  it('[REQ-REND-09] draws the inner photo using a rounded clipping path to round its corners when innerImageRadiusScale is enabled', () => {
+    const { canvas, ctx } = createMockCanvas();
+    const imgObj = { width: 1000, height: 1000 } as HTMLImageElement;
+    const configWithRadius = {
+      ...baseConfig,
+      layout: {
+        ...baseConfig.layout,
+        innerImageRadiusScale: 0.05,
+      },
+    };
+    renderPhotoBorder(canvas, mockImageItem, imgObj, configWithRadius, null);
+    expect(ctx.roundRect).toHaveBeenCalled();
+    expect(ctx.clip).toHaveBeenCalled();
+  });
+
+  it('[REQ-REND-10] scales brand logo proportionally and renders it onto the canvas at designated position', () => {
+    const { canvas, ctx } = createMockCanvas();
+    const imgObj = { width: 1000, height: 1000 } as HTMLImageElement;
+    
+    // Read the favicon.svg file
+    const svgPath = path.resolve(__dirname, '../public/favicon.svg');
+    const svgContent = fs.readFileSync(svgPath, 'utf8');
+    const logoDataUrl = `data:image/svg+xml;utf8,${encodeURIComponent(svgContent)}`;
+    
+    const configWithLogo = {
+      ...baseConfig,
+      logo: {
+        dataUrl: logoDataUrl,
+        sizeScale: 0.15,
+        position: 'Bottom Center' as const,
+        offsetXScale: 0.02,
+        offsetYScale: 0.02,
+      },
+    };
+    
+    // Mock the logo image object
+    const mockLogoImg = {
+      width: 1120,
+      height: 1120,
+    } as HTMLImageElement;
+    
+    renderPhotoBorder(canvas, mockImageItem, imgObj, configWithLogo, mockLogoImg);
+    expect(ctx.drawImage).toHaveBeenCalledWith(mockLogoImg, expect.any(Number), expect.any(Number), expect.any(Number), expect.any(Number));
+  });
+
+  it('[REQ-REND-11] renders the inner card with rounded corners when inner card radius scale is enabled and roundRect is supported', () => {
+    const { canvas, ctx } = createMockCanvas();
+    const imgObj = { width: 1000, height: 1000 } as HTMLImageElement;
+    const configWithCardRadius = {
+      ...baseConfig,
+      layout: {
+        ...baseConfig.layout,
+        imageRadiusScale: 0.05,
+      },
+    };
+    renderPhotoBorder(canvas, mockImageItem, imgObj, configWithCardRadius, null);
+    expect(ctx.roundRect).toHaveBeenCalled();
+  });
+
+  it('[REQ-REND-12] renders outer card shadow offset and blur below the inner card when enabled', () => {
+    const { canvas, ctx } = createMockCanvas();
+    const imgObj = { width: 1000, height: 1000 } as HTMLImageElement;
+    const configWithCardShadow = {
+      ...baseConfig,
+      layout: {
+        ...baseConfig.layout,
+        imageShadowBlurScale: 0.05,
+      },
+    };
+    renderPhotoBorder(canvas, mockImageItem, imgObj, configWithCardShadow, null);
+    expect(ctx.shadowColor).toBe('rgba(0,0,0,0.5)');
+    expect(ctx.shadowBlur).toBeGreaterThan(0);
+  });
+
+  it('[REQ-REND-13] formats and renders EXIF parameter labels inside pill boxes on the canvas when enabled', () => {
+    const { canvas, ctx } = createMockCanvas();
+    const imgObj = { width: 1000, height: 1000 } as HTMLImageElement;
+    
+    const imageWithExif = {
+      ...mockImageItem,
+      exif: {
+        focalLength: 50,
+        fNumber: 1.8,
+        iso: 100,
+        exposureTime: '1/125',
+        lens: '50mm f/1.8',
+        make: 'Sony',
+        model: 'A7III',
+        date: '2026-06-08',
+      },
+    };
+
+    const configWithExifPills = {
+      ...baseConfig,
+      exifPills: {
+        ...baseConfig.exifPills,
+        show: true,
+        showFocal: true,
+        showAperture: true,
+        showIso: true,
+        showShutter: true,
+        showLens: true,
+        showCamera: true,
+        showDate: true,
+        textStrokeWidthScale: 0.02,
+        borderWidthScale: 0.02,
+      },
+    };
+
+    renderPhotoBorder(canvas, imageWithExif, imgObj, configWithExifPills, null);
+    
+    // Check that we draw the pill shapes and text
+    expect(ctx.roundRect).toHaveBeenCalled();
+    expect(ctx.fillText).toHaveBeenCalledWith('50', expect.any(Number), expect.any(Number));
+    expect(ctx.fillText).toHaveBeenCalledWith('mm', expect.any(Number), expect.any(Number));
+    expect(ctx.strokeText).toHaveBeenCalled();
+  });
+
+  it('[REQ-REND-05] falls back to standard rectangular borders for EXIF pills if ctx.roundRect is not supported', () => {
+    const { canvas, ctx } = createMockCanvas();
+    ctx.roundRect = undefined as any;
+    const imgObj = { width: 1000, height: 1000 } as HTMLImageElement;
+    
+    const imageWithExif = {
+      ...mockImageItem,
+      exif: {
+        focalLength: 50,
+      },
+    };
+
+    const configWithExifPills = {
+      ...baseConfig,
+      exifPills: {
+        ...baseConfig.exifPills,
+        show: true,
+        showFocal: true,
+        borderWidthScale: 0.02,
+      },
+    };
+
+    renderPhotoBorder(canvas, imageWithExif, imgObj, configWithExifPills, null);
+    
+    expect(ctx.rect).toHaveBeenCalled();
   });
 });
