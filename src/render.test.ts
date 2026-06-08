@@ -405,4 +405,200 @@ describe('renderPhotoBorder calculations', () => {
     
     expect(ctx.rect).toHaveBeenCalled();
   });
+
+  it('[REQ-REND-03] renders rich text formats (bold and italic) and different alignments for labels', () => {
+    const { canvas, ctx } = createMockCanvas();
+    const imgObj = { width: 1000, height: 1000 } as HTMLImageElement;
+    
+    // Config with center and right aligned rich text labels
+    const configWithRichText = {
+      ...baseConfig,
+      labels: [
+        {
+          id: 'lbl-center',
+          show: true,
+          text: '**Bold** text',
+          fontFamily: 'Arial',
+          fontSizeScale: 0.05,
+          color: '#000000',
+          position: 'Top Center' as const,
+          positionXScale: 0,
+          positionYScale: 0,
+        },
+        {
+          id: 'lbl-right',
+          show: true,
+          text: '*Italic* text',
+          fontFamily: 'Arial',
+          fontSizeScale: 0.05,
+          color: '#000000',
+          position: 'Top Right' as const,
+          positionXScale: 0,
+          positionYScale: 0,
+        }
+      ]
+    };
+
+    renderPhotoBorder(canvas, mockImageItem, imgObj, configWithRichText, null);
+    
+    expect(ctx.fillText).toHaveBeenCalled();
+  });
+
+  it('[REQ-REND-03] renders active image caption text and caption style overrides when provided', () => {
+    const { canvas, ctx } = createMockCanvas();
+    const imgObj = { width: 1000, height: 1000 } as HTMLImageElement;
+    
+    const imageWithCaption = {
+      ...mockImageItem,
+      captionText: 'Override Caption',
+      captionStyle: {
+        color: '#ff0000',
+        fontStyle: 'italic' as const,
+        fontWeight: 'bold' as const,
+      }
+    };
+
+    const configWithLabels = {
+      ...baseConfig,
+      labels: [{
+        id: 'lbl-1',
+        show: true,
+        text: 'Original Label Text',
+        fontFamily: 'Arial',
+        fontSizeScale: 0.05,
+        color: '#000000',
+        position: 'Bottom Center' as const,
+        positionXScale: 0,
+        positionYScale: 0,
+      }],
+    };
+
+    renderPhotoBorder(canvas, imageWithCaption, imgObj, configWithLabels, null);
+    
+    expect(ctx.fillText).toHaveBeenCalledWith('Override Caption', expect.any(Number), expect.any(Number));
+    expect(ctx.fillStyle).toBe('#ff0000');
+  });
+
+  it('[REQ-REND-10] scales brand logo and aligns it to Bottom Right', () => {
+    const { canvas, ctx } = createMockCanvas();
+    const imgObj = { width: 1000, height: 1000 } as HTMLImageElement;
+    
+    const configWithRightLogo = {
+      ...baseConfig,
+      logo: {
+        dataUrl: 'data:image/svg+xml;utf8,<svg></svg>',
+        sizeScale: 0.15,
+        position: 'Bottom Right' as const,
+        offsetXScale: 0.02,
+        offsetYScale: 0.02,
+      },
+    };
+    
+    const mockLogoImg = {
+      width: 500,
+      height: 250,
+    } as HTMLImageElement;
+    
+    renderPhotoBorder(canvas, mockImageItem, imgObj, configWithRightLogo, mockLogoImg);
+    expect(ctx.drawImage).toHaveBeenCalledWith(mockLogoImg, expect.any(Number), expect.any(Number), expect.any(Number), expect.any(Number));
+  });
+
+  it('covers remaining branch paths in render.ts (empty/left/right EXIF pills, borderWidthScale <= 0, hidden labels, logo falsy offsets and left alignment)', () => {
+    const imgObj = { width: 1000, height: 1000 } as HTMLImageElement;
+
+    // 1. Empty dataPairs branch when exifPills.show is true but all pill types are false
+    const { canvas: canvas1 } = createMockCanvas();
+    const configEmptyPills = {
+      ...baseConfig,
+      exifPills: {
+        ...baseConfig.exifPills,
+        show: true,
+        showFocal: false,
+        showAperture: false,
+        showIso: false,
+        showShutter: false,
+        showLens: false,
+        showCamera: false,
+        showDate: false,
+      },
+    };
+    renderPhotoBorder(canvas1, mockImageItem, imgObj, configEmptyPills, null);
+
+    // 2. EXIF pills left/right alignments, and borderWidthScale <= 0
+    const { canvas: canvas2, ctx: ctx2 } = createMockCanvas();
+    const imageWithExif = {
+      ...mockImageItem,
+      exif: { focalLength: 50 },
+    };
+    const configPillAlignments = {
+      ...baseConfig,
+      exifPills: {
+        ...baseConfig.exifPills,
+        show: true,
+        showFocal: true,
+        position: 'Bottom Right' as const, // Right alignment
+        borderWidthScale: 0, // borderWidthScale <= 0 branch
+      },
+    };
+    renderPhotoBorder(canvas2, imageWithExif, imgObj, configPillAlignments, null);
+    expect(ctx2.stroke).not.toHaveBeenCalled(); // due to borderWidthScale: 0
+
+    const { canvas: canvas3 } = createMockCanvas();
+    const configPillLeftAlign = {
+      ...baseConfig,
+      exifPills: {
+        ...baseConfig.exifPills,
+        show: true,
+        showFocal: true,
+        position: 'Bottom Left' as const, // Left alignment
+      },
+    };
+    renderPhotoBorder(canvas3, imageWithExif, imgObj, configPillLeftAlign, null);
+
+    // 3. Logo Left Alignment & Falsy Offsets
+    const { canvas: canvas4 } = createMockCanvas();
+    const configLogoLeftAlign = {
+      ...baseConfig,
+      logo: {
+        dataUrl: 'data:image/svg+xml;utf8,<svg></svg>',
+        sizeScale: 0.15,
+        position: 'Bottom Left' as const, // Left alignment
+        offsetXScale: 0, // Falsy offsets branch
+        offsetYScale: 0,
+      },
+    };
+    const mockLogoImg = { width: 500, height: 250 } as HTMLImageElement;
+    renderPhotoBorder(canvas4, mockImageItem, imgObj, configLogoLeftAlign, mockLogoImg);
+
+    // 4. Hidden/empty labels
+    const { canvas: canvas5 } = createMockCanvas();
+    const configHiddenLabels = {
+      ...baseConfig,
+      labels: [
+        {
+          id: 'lbl-hidden',
+          show: false,
+          text: 'Hidden text',
+          fontFamily: 'Arial',
+          fontSizeScale: 0.05,
+          color: '#000000',
+          position: 'Top Left' as const,
+          positionXScale: 0,
+          positionYScale: 0,
+        },
+        {
+          id: 'lbl-empty',
+          show: true,
+          text: '',
+          fontFamily: 'Arial',
+          fontSizeScale: 0.05,
+          color: '#000000',
+          position: 'Top Left' as const,
+          positionXScale: 0,
+          positionYScale: 0,
+        }
+      ]
+    };
+    renderPhotoBorder(canvas5, mockImageItem, imgObj, configHiddenLabels, null);
+  });
 });

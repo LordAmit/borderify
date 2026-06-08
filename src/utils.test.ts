@@ -29,6 +29,11 @@ describe('resolveTemplate', () => {
     // {make} -> 'Sony', {model} -> '', resulting string: 'Shot on Sony \nNext line here' -> collapsed to 'Shot on Sony\nNext line here'
     expect(resolveTemplate(input, exif)).toBe('Shot on Sony\nNext line here');
   });
+
+  it('[REQ-EXIF-06] returns empty string immediately if input raw template is empty or falsy', () => {
+    expect(resolveTemplate('', undefined)).toBe('');
+    expect(resolveTemplate('', {})).toBe('');
+  });
 });
 
 describe('JSZip batch integration', () => {

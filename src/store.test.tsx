@@ -281,4 +281,35 @@ describe('useStore', () => {
     expect(result.current.state.images).toHaveLength(0);
     expect(result.current.state.activeImageId).toBeNull();
   });
+
+  it('[REQ-STAT-04] removing an inactive image does not change the activeImageId', () => {
+    const wrapper = ({ children }: { children: React.ReactNode }) => <StoreProvider>{children}</StoreProvider>;
+    const { result } = renderHook(() => useStore(), { wrapper });
+
+    const mockImage1: ImageItem = { id: '1', file: new File([], '1.jpg'), objectUrl: 'blob:1', width: 100, height: 100, exif: {} };
+    const mockImage2: ImageItem = { id: '2', file: new File([], '2.jpg'), objectUrl: 'blob:2', width: 100, height: 100, exif: {} };
+
+    act(() => {
+      result.current.addImage(mockImage1);
+      result.current.addImage(mockImage2);
+    });
+
+    expect(result.current.state.activeImageId).toBe('1');
+
+    act(() => {
+      result.current.removeImage('2');
+    });
+
+    expect(result.current.state.images).toHaveLength(1);
+    expect(result.current.state.images[0].id).toBe('1');
+    expect(result.current.state.activeImageId).toBe('1');
+  });
+
+  it('throws an error if useStore is used outside of StoreProvider', () => {
+    const consoleErrorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+    expect(() => {
+      renderHook(() => useStore());
+    }).toThrow('useStore must be used within StoreProvider');
+    consoleErrorSpy.mockRestore();
+  });
 });
