@@ -153,7 +153,8 @@ export const StoreProvider: React.FC<{ children: ReactNode }> = ({ children }) =
     setState(prev => ({
       ...prev,
       images: prev.images.map(img => {
-        const { captionStyle, ...rest } = img;
+        const rest = { ...img };
+        delete rest.captionStyle;
         return rest;
       })
     }));
