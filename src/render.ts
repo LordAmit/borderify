@@ -3,7 +3,6 @@ import { resolveTemplate } from './utils';
 
 // Helper to calculate X/Y based on a 9-point grid relative to a container
 type Alignment = 'left' | 'center' | 'right';
-type VAlignment = 'top' | 'middle' | 'bottom';
 
 function getPreciseAnchor(
   containerW: number,
@@ -13,18 +12,18 @@ function getPreciseAnchor(
   padBottom: number,
   padSide: number,
   position: string
-): { x: number; y: number; align: Alignment; vAlign: VAlignment } {
+): { x: number; y: number; align: Alignment } {
   // Coordinates are relative to the top-left of the entire card block (container)
-  const map: Record<string, { x: number; y: number; align: Alignment; vAlign: VAlignment }> = {
-    'Top Left':      { x: padSide / 2,                  y: padTop / 2,                   align: 'left',   vAlign: 'middle' },
-    'Top Center':    { x: containerW / 2,               y: padTop / 2,                   align: 'center', vAlign: 'middle' },
-    'Top Right':     { x: containerW - (padSide / 2),   y: padTop / 2,                   align: 'right',  vAlign: 'middle' },
-    'Middle Left':   { x: padSide / 2,                  y: padTop + (imgH / 2),          align: 'left',   vAlign: 'middle' },
-    'Center':        { x: containerW / 2,               y: padTop + (imgH / 2),          align: 'center', vAlign: 'middle' },
-    'Middle Right':  { x: containerW - (padSide / 2),   y: padTop + (imgH / 2),          align: 'right',  vAlign: 'middle' },
-    'Bottom Left':   { x: padSide / 2,                  y: containerH - (padBottom / 2), align: 'left',   vAlign: 'middle' },
-    'Bottom Center': { x: containerW / 2,               y: containerH - (padBottom / 2), align: 'center', vAlign: 'middle' },
-    'Bottom Right':  { x: containerW - (padSide / 2),   y: containerH - (padBottom / 2), align: 'right',  vAlign: 'middle' },
+  const map: Record<string, { x: number; y: number; align: Alignment }> = {
+    'Top Left':      { x: padSide / 2,                  y: padTop / 2,                   align: 'left' },
+    'Top Center':    { x: containerW / 2,               y: padTop / 2,                   align: 'center' },
+    'Top Right':     { x: containerW - (padSide / 2),   y: padTop / 2,                   align: 'right' },
+    'Middle Left':   { x: padSide / 2,                  y: padTop + (imgH / 2),          align: 'left' },
+    'Center':        { x: containerW / 2,               y: padTop + (imgH / 2),          align: 'center' },
+    'Middle Right':  { x: containerW - (padSide / 2),   y: padTop + (imgH / 2),          align: 'right' },
+    'Bottom Left':   { x: padSide / 2,                  y: containerH - (padBottom / 2), align: 'left' },
+    'Bottom Center': { x: containerW / 2,               y: containerH - (padBottom / 2), align: 'center' },
+    'Bottom Right':  { x: containerW - (padSide / 2),   y: containerH - (padBottom / 2), align: 'right' },
   };
 
   return map[position] || map['Bottom Center'];
@@ -229,9 +228,7 @@ export const renderPhotoBorder = (
       if (anchor.align === 'right') startX -= totalWidth;
       else if (anchor.align === 'center') startX -= (totalWidth / 2);
 
-      let startY = cardY + anchor.y + offsetY;
-      if (anchor.vAlign === 'middle') startY -= (boxHeight / 2);
-      else if (anchor.vAlign === 'bottom') startY -= boxHeight;
+      const startY = cardY + anchor.y + offsetY - (boxHeight / 2);
 
       let currentX = startX;
       measuredPairs.forEach((pair) => {
