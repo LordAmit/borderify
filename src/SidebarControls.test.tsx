@@ -49,7 +49,7 @@ const setupTest = (props = {}) => {
 };
 
 describe('SidebarControls Settings Interactions', () => {
-  it('toggles accordion sections upon header clicks', () => {
+  it('[REQ-UI-02] organizes settings inside collapsible sections', () => {
     setupTest();
     // Default open section is layout. Captions section should be collapsed
     expect(screen.queryByText(/Caption Text/i)).not.toBeInTheDocument();
@@ -94,7 +94,7 @@ describe('SidebarControls Settings Interactions', () => {
     expect(stateObj.innerBorderMode).toBe('custom');
   });
 
-  it('nudges sliders using increase and decrease buttons', () => {
+  it('[REQ-UI-03] controls sliders using plus/minus increment buttons', () => {
     setupTest();
 
     // Find nudge buttons for Frame Size
@@ -195,7 +195,7 @@ describe('SidebarControls Settings Interactions', () => {
     expect(stateObj.exifPills.show).toBe(true);
   });
 
-  it('triggers preset save and load callbacks', () => {
+  it('[REQ-UI-04] supports exporting configuration presets', () => {
     const onSave = vi.fn();
     const onLoad = vi.fn();
     setupTest({ onSavePreset: onSave, onLoadPreset: onLoad });

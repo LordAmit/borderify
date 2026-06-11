@@ -119,28 +119,6 @@ describe('App Layout and UI components', () => {
     expect(screen.getByText(/Browse/i) || screen.getByText(/Choose Photos/i)).toBeInTheDocument();
   });
 
-  it('[REQ-UI-02] organizes settings inside collapsible sections', () => {
-    renderApp();
-    expect(screen.getByText(/Layout & Border/i)).toBeInTheDocument();
-    expect(screen.getByText(/Caption/i)).toBeInTheDocument();
-    expect(screen.getByText(/Presets/i)).toBeInTheDocument();
-  });
-
-  it('[REQ-UI-03] controls sliders using plus/minus increment buttons', () => {
-    renderApp();
-    expect(screen.getByText(/Frame Size/i)).toBeInTheDocument();
-    const buttons = screen.getAllByRole('button');
-    const plusMinusButtons = buttons.filter(btn => btn.textContent === '+' || btn.textContent === '−' || btn.textContent === '-');
-    expect(plusMinusButtons.length).toBeGreaterThan(0);
-  });
-
-  it('[REQ-UI-04] supports exporting configuration presets', () => {
-    renderApp();
-    const presetsHeader = screen.getByText(/Presets/i);
-    fireEvent.click(presetsHeader);
-    const savePresetBtn = screen.getByText(/Save preset/i);
-    expect(savePresetBtn).toBeInTheDocument();
-  });
 
   it('[REQ-UI-05] renders empty image queue state by default', () => {
     renderApp();
