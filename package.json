@@ -13,7 +13,8 @@
     "lint-specs": "node .specify/scripts/lint-specs.js",
     "check-spec-drift": "node .specify/scripts/check-spec-drift.js",
     "prepare": "git config core.hooksPath .specify/hooks",
-    "coverage": "vitest run --coverage"
+    "coverage": "vitest run --coverage src/utils.test.ts src/exif.test.ts src/render.test.ts src/store.test.tsx",
+    "coverage-all": "vitest run --coverage"
   },
   "dependencies": {
     "@types/piexifjs": "^1.0.0",

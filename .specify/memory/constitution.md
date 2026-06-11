@@ -4,7 +4,7 @@ This document defines the non-negotiable principles, development standards, arch
 
 ## 1. Safety and Deployment Restrictions
 *   **No Automated Deployments:** Under no circumstances shall an AI coding assistant run `npm run deploy`, `rsync`, or execute any commands that deploy code to staging or production environments. All deployments must be done manually by the human user via `./deploy.sh`.
-*   **Mandatory Implementation Plan Review:** AI agents shall present a detailed implementation plan and obtain the user's explicit approval *before* executing any codebase modifications, script additions, or feature implementations. Investigatory or clarifying questions shall not trigger auto-implementation without approval.
+*   **Mandatory Plan and Approval Review (No Exceptions):** AI agents shall present a detailed plan and obtain the user's explicit approval *before* executing any modifications to code, configuration files, scripts, workflows, or project instructions. This includes any minor tweaks, script updates, or follow-up changes to already approved plans. No changes shall be made or committed without direct user consent in the current turn.
 
 ## 2. Architectural Principles
 *   **Canvas-First Rendering:** The system shall use HTML5 Canvas (`CanvasRenderingContext2D`) as the single source of truth for generating output frames, ensuring pixel-perfect exports. DOM-based overlays are restricted to visual previews only.
