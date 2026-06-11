@@ -38,8 +38,8 @@ jobs:
     - name: Verify Specification Traceability
       run: npm run verify-specs
 
-    - name: Run Tests
-      run: npm run test -- --run
+    - name: Run Tests and Coverage
+      run: npm run coverage
 
     - name: Build Project
       run: npm run build
