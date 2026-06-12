@@ -25,6 +25,8 @@ describe('renderPhotoBorder calculations', () => {
       shadowColor: '',
       shadowBlur: 0,
       fillStyle: '',
+      strokeStyle: '',
+      lineWidth: 0,
       strokeText: vi.fn(),
     };
 
@@ -65,6 +67,8 @@ describe('renderPhotoBorder calculations', () => {
       innerImageRadiusScale: 0,
       imageShadowBlurScale: 0,
       innerImageShadowBlurScale: 0,
+      photoBorderColor: '#000000',
+      photoBorderWidthScale: 0,
     },
     labels: [],
     logo: {
@@ -379,6 +383,26 @@ describe('renderPhotoBorder calculations', () => {
     expect(ctx.fillText).toHaveBeenCalledWith('50', expect.any(Number), expect.any(Number));
     expect(ctx.fillText).toHaveBeenCalledWith('mm', expect.any(Number), expect.any(Number));
     expect(ctx.strokeText).toHaveBeenCalled();
+  });
+
+  it('[REQ-REND-14] renders a stroke border of the specified color and width scale directly around the photo boundaries', () => {
+    const { canvas, ctx } = createMockCanvas();
+    const imgObj = { width: 1000, height: 1000 } as HTMLImageElement;
+
+    const configWithPhotoBorder = {
+      ...baseConfig,
+      layout: {
+        ...baseConfig.layout,
+        photoBorderColor: '#ff00ff',
+        photoBorderWidthScale: 0.01,
+      },
+    };
+
+    renderPhotoBorder(canvas, mockImageItem, imgObj, configWithPhotoBorder, null);
+
+    expect(ctx.stroke).toHaveBeenCalled();
+    expect(ctx.strokeStyle).toBe('#ff00ff');
+    expect(ctx.lineWidth).toBeGreaterThan(0);
   });
 
   it('[REQ-REND-05] falls back to standard rectangular borders for EXIF pills if ctx.roundRect is not supported', () => {

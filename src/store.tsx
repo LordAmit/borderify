@@ -20,6 +20,8 @@ export const defaultConfig: AppConfig = {
     innerImageRadiusScale: 0,
     imageShadowBlurScale: 0,
     innerImageShadowBlurScale: 0,
+    photoBorderColor: "#000000",
+    photoBorderWidthScale: 0,
   },
   labels: [
     {

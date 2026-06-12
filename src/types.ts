@@ -38,6 +38,8 @@ export interface LayoutSettings {
   innerImageRadiusScale: number; // corner rounding for the actual inner photo
   imageShadowBlurScale: number;
   innerImageShadowBlurScale: number;
+  photoBorderColor: string;
+  photoBorderWidthScale: number;
 }
 
 export interface TextLabel {

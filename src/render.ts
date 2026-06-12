@@ -175,6 +175,21 @@ export const renderPhotoBorder = (
   ctx.drawImage(imgObject, photoX, photoY, drawImgW, drawImgH);
   ctx.restore();
 
+  // Draw photo border stroke [REQ-REND-14]
+  if (config.layout.photoBorderWidthScale && config.layout.photoBorderWidthScale > 0) {
+    ctx.save();
+    ctx.beginPath();
+    if (ctx.roundRect && photoRadius > 0) {
+      ctx.roundRect(photoX, photoY, drawImgW, drawImgH, photoRadius);
+    } else {
+      ctx.rect(photoX, photoY, drawImgW, drawImgH);
+    }
+    ctx.lineWidth = baseLength * config.layout.photoBorderWidthScale;
+    ctx.strokeStyle = config.layout.photoBorderColor || '#000000';
+    ctx.stroke();
+    ctx.restore();
+  }
+
 
 
   // EXIF Pills

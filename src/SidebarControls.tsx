@@ -619,6 +619,25 @@ const SidebarControls: React.FC<SidebarControlsProps> = ({
                     onChange={(val: number) => updateConfig(c => ({ ...c, layout: { ...c.layout, imagePaddingScale: val } }))}
                     onReset={() => updateConfig(c => ({ ...c, layout: { ...c.layout, imagePaddingScale: defaultConfig.layout.imagePaddingScale } }))}
                   />
+
+                  <SliderRow
+                    label="Photo Border"
+                    value={config.layout.photoBorderWidthScale}
+                    min="0" max="0.05" step="0.001"
+                    onChange={(val: number) => updateConfig(c => ({ ...c, layout: { ...c.layout, photoBorderWidthScale: val } }))}
+                    onReset={() => updateConfig(c => ({ ...c, layout: { ...c.layout, photoBorderWidthScale: defaultConfig.layout.photoBorderWidthScale || 0 } }))}
+                  />
+
+                  <div className="control-group">
+                    <label className="label">Photo Border Color</label>
+                    <input
+                      type="color"
+                      className="input-field"
+                      style={{ height: '36px', padding: '2px' }}
+                      value={config.layout.photoBorderColor || '#000000'}
+                      onChange={(e) => updateConfig(c => ({ ...c, layout: { ...c.layout, photoBorderColor: e.target.value } }))}
+                    />
+                  </div>
                 </div>
               )}
             </div>

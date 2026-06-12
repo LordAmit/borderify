@@ -16,6 +16,8 @@ const StateViewer = () => {
         borderWidthScale: state.config.layout.borderWidthScale,
         innerBorderMode: state.config.layout.innerBorderMode,
         imageRadiusScale: state.config.layout.imageRadiusScale,
+        photoBorderWidthScale: state.config.layout.photoBorderWidthScale,
+        photoBorderColor: state.config.layout.photoBorderColor,
         labels: state.config.labels,
         logo: state.config.logo,
         exifPills: state.config.exifPills,
@@ -412,4 +414,34 @@ describe('SidebarControls Settings Interactions', () => {
     const exifNudges = exifBody?.querySelectorAll('.nudge-btn') || [];
     exifNudges.forEach(btn => fireEvent.click(btn));
   });
+
+  it('modifies photo border thickness and color controls in advanced section', () => {
+    setupTest();
+    
+    // Toggle Advanced Border & Effects section
+    const advancedToggle = screen.getByText(/Advanced Border & Effects/i);
+    fireEvent.click(advancedToggle);
+
+    // Find the Photo Border input (range slider) and change its value
+    const photoBorderLabelEl = screen.getByText('Photo Border');
+    const sliderContainer = photoBorderLabelEl.closest('.compact-slider');
+    const rangeInput = sliderContainer?.querySelector('input[type="range"]') as HTMLInputElement;
+    expect(rangeInput).toBeDefined();
+
+    fireEvent.change(rangeInput, { target: { value: '0.015' } });
+
+    // Find the Photo Border Color input and change its value
+    const photoBorderColorLabelEl = screen.getByText('Photo Border Color');
+    const colorInputContainer = photoBorderColorLabelEl.closest('.control-group');
+    const colorInput = colorInputContainer?.querySelector('input[type="color"]') as HTMLInputElement;
+    expect(colorInput).toBeDefined();
+
+    fireEvent.change(colorInput, { target: { value: '#ff00ff' } });
+
+    // Verify state matches the changes
+    const stateObj = JSON.parse(screen.getByTestId('store-state').textContent || '{}');
+    expect(stateObj.photoBorderWidthScale).toBe(0.015);
+    expect(stateObj.photoBorderColor).toBe('#ff00ff');
+  });
 });
+

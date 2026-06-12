@@ -158,6 +158,8 @@ describe('useStore', () => {
         innerImageRadiusScale: 0.01,
         imageShadowBlurScale: 0.04,
         innerImageShadowBlurScale: 0.03,
+        photoBorderColor: '#000000',
+        photoBorderWidthScale: 0,
       },
       labels: [],
       logo: { dataUrl: null, sizeScale: 0.05, position: 'Top Left' as const, offsetXScale: 0, offsetYScale: 0 },

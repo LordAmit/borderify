@@ -22,3 +22,5 @@ This document contains the functional requirements for canvas bounds calculation
 *   **[REQ-REND-11]** Where inner card radius scale is enabled and the browser supports `ctx.roundRect`, the system shall render the inner card with rounded corners.
 *   **[REQ-REND-12]** Where outer card shadows are enabled, the system shall render the shadow offset and blur below the inner card.
 *   **[REQ-REND-13]** Where EXIF pills are enabled and EXIF metadata is present, the system shall format and render EXIF parameter labels inside pill boxes on the canvas.
+*   **[REQ-REND-14]** Where photo border is enabled (photoBorderWidthScale > 0), the system shall render a stroke border of the specified color and width scale directly around the photo boundaries.
+
