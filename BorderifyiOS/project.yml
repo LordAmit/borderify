@@ -1,0 +1,19 @@
+name: Borderify
+options:
+  bundleIdPrefix: com.lordamit
+targets:
+  Borderify:
+    type: application
+    platform: iOS
+    deploymentTarget: "16.0"
+    sources:
+      - path: .
+        excludes:
+          - "project.yml"
+          - "README.md"
+    settings:
+      GENERATE_INFOPLIST_FILE: true
+      INFOPLIST_KEY_CFBundleDisplayName: "Borderify"
+      INFOPLIST_KEY_UILaunchScreen_Generation: true
+      INFOPLIST_KEY_UISupportedInterfaceOrientations: "UIInterfaceOrientationPortrait"
+      INFOPLIST_KEY_NSPhotoLibraryAddUsageDescription: "This app needs permission to save styled photos to your library."
