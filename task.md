@@ -1,0 +1,30 @@
+# Tasks
+
+- `[x]` Create Models and Helper structures (`Models.swift`)
+- `[x]` Implement Native EXIF Reader & Writer (`EXIFHelper.swift`)
+- `[x]` Build Core Rendering Engine with Core Image and Core Graphics (`BorderRenderer.swift`)
+- `[x]` Implement UI controls and layout (`ContentView.swift`)
+- `[x]` Implement App Entry Point (`BorderifyApp.swift`)
+- `[x]` Create `BorderifyiOS/README.md` for open source users
+- `[x]` Create `BorderifyiOS/project.yml` for XcodeGen support
+- `[x]` Add SwiftLint build phase & Test target to `project.yml`
+- `[x]` Create `BorderifyiOS/.swiftlint.yml`
+- `[x]` Implement unit tests in `BorderifyiOS/BorderifyTests/`
+- `[x]` Add Style Presets Picker in ContentView.swift
+- `[x]` Add Multi-Image import & Interactive Carousel in ContentView.swift
+- `[x]` Implement Task-based debounced rendering in ContentView.swift
+- `[x]` Implement preset label restoration logic in ContentView.swift
+- `[x]` Add custom logo support in ContentView.swift
+- `[x]` Add `[REQ-STAT-07]` to `store.spec.md`
+- `[x]` Copy `favicon.png` to `BorderifyiOS/`
+- `[x]` Modify default EXIF pills in `Models.swift`
+- `[x]` Add photo border controls and custom EXIF text fields in `ContentView.swift`
+- `[x]` Render brand logo icon in header of `ContentView.swift`
+- `[x]` Add `[REQ-STAT-08]` to `store.spec.md`
+- `[x]` Rearrange drawers in `ContentView.swift`
+- `[x]` Create Assets.xcassets directory structures and Contents.json files
+- `[x]` Copy favicon.png to asset sets
+- `[x]` Add App Icon setting to `project.yml`
+- `[x]` Update `ContentView.swift` to use `Image("favicon")`
+- `[x]` Fix REQ-STAT-07 and REQ-STAT-08 syntax in `store.spec.md`
+- `[x]` Update planning constraints in `agents.md`
