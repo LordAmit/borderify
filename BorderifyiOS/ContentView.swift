@@ -2,17 +2,24 @@ import SwiftUI
 import PhotosUI
 
 struct ContentView: View {
-    @State private var selectedItem: PhotosPickerItem? = nil
-    @State private var originalData: Data? = nil
-    @State private var imageItem: ImageItem? = nil
+    @State private var selectedItems: [PhotosPickerItem] = []
+    @State private var originalDataMap: [UUID: Data] = [:]
+    @State private var imageItems: [ImageItem] = []
+    @State private var activeImageIndex: Int = 0
     @State private var config = AppConfig()
-    @State private var previewImage: UIImage? = nil
+    @State private var previewImage: UIImage?
     @State private var isProcessing = false
-    @State private var exportMessage: String? = nil
+    @State private var exportMessage: String?
     @State private var showingExportAlert = false
+    @State private var selectedPreset: String = "custom"
+    
+    // Logo State
+    @State private var selectedLogoItem: PhotosPickerItem?
+    @State private var logoImage: UIImage?
     
     // Sliders & customization tab
     @State private var activeTab: String = "Layout"
+    @State private var renderTask: Task<Void, Never>?
     
     var body: some View {
         NavigationView {
@@ -27,22 +34,49 @@ struct ContentView: View {
                             .progressViewStyle(CircularProgressViewStyle(tint: .white))
                             .foregroundColor(.white)
                     } else if let preview = previewImage {
-                        Image(uiImage: preview)
-                            .resizable()
-                            .scaledToFit()
-                            .padding(16)
-                            .shadow(radius: 10)
+                        VStack(spacing: 12) {
+                            Image(uiImage: preview)
+                                .resizable()
+                                .scaledToFit()
+                                .padding(16)
+                                .shadow(radius: 10)
+                            
+                            // Carousel of thumbnails
+                            if imageItems.count > 1 {
+                                ScrollView(.horizontal, showsIndicators: false) {
+                                    HStack(spacing: 10) {
+                                        ForEach(0..<imageItems.count, id: \.self) { index in
+                                            Image(uiImage: imageItems[index].uiImage)
+                                                .resizable()
+                                                .scaledToFill()
+                                                .frame(width: 60, height: 60)
+                                                .clipShape(RoundedRectangle(cornerRadius: 6))
+                                                .overlay(
+                                                    RoundedRectangle(cornerRadius: 6)
+                                                        .stroke(activeImageIndex == index ? Color.blue : Color.clear, lineWidth: 3)
+                                                )
+                                                .onTapGesture {
+                                                    activeImageIndex = index
+                                                    triggerRender()
+                                                }
+                                        }
+                                    }
+                                    .padding(.horizontal, 16)
+                                }
+                                .frame(height: 70)
+                            }
+                        }
                     } else {
                         VStack(spacing: 16) {
                             Image(systemName: "photo.on.rectangle.angled")
                                 .font(.system(size: 64))
                                 .foregroundColor(.gray)
-                            Text("Select a photo from library to begin")
+                            Text("Select photos from library to begin")
                                 .font(.headline)
                                 .foregroundColor(.gray)
                             
-                            PhotosPicker(selection: $selectedItem, matching: .images) {
-                                Text("Choose Photo")
+                            PhotosPicker(selection: $selectedItems, matching: .images) {
+                                Text("Choose Photos")
                                     .fontWeight(.semibold)
                                     .padding()
                                     .frame(width: 200)
@@ -55,14 +89,15 @@ struct ContentView: View {
                 }
                 .frame(maxHeight: .infinity)
                 
-                if imageItem != nil {
+                if !imageItems.isEmpty {
                     // Settings Drawer
                     VStack(spacing: 0) {
                         // Settings Category Selector
                         HStack(spacing: 0) {
                             tabButton(title: "Layout", systemImage: "rectangle.split.3x1")
-                            tabButton(title: "EXIF Pills", systemImage: "info.circle")
                             tabButton(title: "Labels", systemImage: "character.textbox")
+                            tabButton(title: "Logo", systemImage: "photo.circle")
+                            tabButton(title: "EXIF Pills", systemImage: "info.circle")
                             tabButton(title: "Export", systemImage: "square.and.arrow.up")
                         }
                         .background(Color(UIColor.secondarySystemBackground))
@@ -78,6 +113,8 @@ struct ContentView: View {
                                     exifControls
                                 } else if activeTab == "Labels" {
                                     labelsControls
+                                } else if activeTab == "Logo" {
+                                    logoControls
                                 } else if activeTab == "Export" {
                                     exportControls
                                 }
@@ -90,31 +127,43 @@ struct ContentView: View {
                     .transition(.move(edge: .bottom))
                 }
             }
-            .navigationTitle("Borderify")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
+                ToolbarItem(placement: .principal) {
+                    HStack(spacing: 8) {
+                        Image("favicon")
+                            .resizable()
+                            .scaledToFit()
+                            .frame(width: 28, height: 28)
+                        Text("Borderify")
+                            .font(.headline)
+                    }
+                }
                 ToolbarItem(placement: .navigationBarLeading) {
-                    if imageItem != nil {
-                        PhotosPicker(selection: $selectedItem, matching: .images) {
+                    if !imageItems.isEmpty {
+                        PhotosPicker(selection: $selectedItems, matching: .images) {
                             Image(systemName: "photo.badge.plus")
                                 .font(.body)
                         }
                     }
                 }
                 ToolbarItem(placement: .navigationBarTrailing) {
-                    if let imageItem = imageItem {
+                    if !imageItems.isEmpty {
                         Button(action: exportAndSave) {
                             HStack {
                                 Image(systemName: "square.and.arrow.down")
-                                Text("Save")
+                                Text("Save \(imageItems.count > 1 ? "All" : "")")
                             }
                             .fontWeight(.bold)
                         }
                     }
                 }
             }
-            .onChange(of: selectedItem) { _ in
-                loadSelectedPhoto()
+            .onChange(of: selectedItems) { _ in
+                loadSelectedPhotos()
+            }
+            .onChange(of: selectedLogoItem) { _ in
+                loadLogoPhoto()
             }
             .onChange(of: config) { _ in
                 triggerRender()
@@ -131,7 +180,7 @@ struct ContentView: View {
     
     // Tab selector helper
     private func tabButton(title: String, systemImage: String) -> some View {
-        Button(action: { activeTab = title }) {
+        Button(action: { activeTab = title }, label: {
             VStack(spacing: 4) {
                 Image(systemName: systemImage)
                     .font(.system(size: 18))
@@ -142,12 +191,30 @@ struct ContentView: View {
             .padding(.vertical, 8)
             .foregroundColor(activeTab == title ? .blue : .gray)
             .contentShape(Rectangle())
-        }
+        })
     }
     
     // Core Layout Control Views
     private var layoutControls: some View {
         VStack(alignment: .leading, spacing: 14) {
+            Group {
+                Text("Style Preset")
+                    .font(.caption)
+                    .foregroundColor(.secondary)
+                Picker("Preset", selection: $selectedPreset) {
+                    Text("Custom").tag("custom")
+                    Text("Polaroid").tag("polaroid")
+                    Text("Museum").tag("museum")
+                    Text("Minimal").tag("minimal")
+                }
+                .pickerStyle(SegmentedPickerStyle())
+                .onChange(of: selectedPreset) { preset in
+                    applyPreset(preset)
+                }
+            }
+            
+            Divider()
+            
             Group {
                 Text("Aspect Ratio")
                     .font(.caption)
@@ -202,6 +269,19 @@ struct ContentView: View {
             SliderRow(title: "Card Shadow", value: $config.layout.imageShadowBlurScale, range: 0.0...0.08, step: 0.005)
             SliderRow(title: "Photo Corners", value: $config.layout.innerImageRadiusScale, range: 0.0...0.05, step: 0.002)
             SliderRow(title: "Photo Shadow", value: $config.layout.innerImageShadowBlurScale, range: 0.0...0.08, step: 0.005)
+            
+            Divider()
+            
+            Group {
+                Text("Photo Border Style")
+                    .font(.caption)
+                    .foregroundColor(.secondary)
+                ColorPicker("Photo Border Color", selection: Binding(
+                    get: { Color(hex: config.layout.photoBorderColor) },
+                    set: { config.layout.photoBorderColor = $0.toHex() }
+                ))
+                SliderRow(title: "Photo Border Width", value: $config.layout.photoBorderWidthScale, range: 0.0...0.05, step: 0.001)
+            }
         }
     }
     
@@ -219,6 +299,24 @@ struct ContentView: View {
                     Toggle("Shutter Speed", isOn: $config.exifPills.showShutter)
                     Toggle("Lens Info", isOn: $config.exifPills.showLens)
                     Toggle("Camera Name", isOn: $config.exifPills.showCamera)
+                }
+                
+                Divider()
+                Group {
+                    Text("Pill Templates")
+                        .font(.caption)
+                        .foregroundColor(.secondary)
+                    TextField("Custom Camera Template", text: Binding(
+                        get: { config.exifPills.customCameraText ?? "" },
+                        set: { config.exifPills.customCameraText = $0.isEmpty ? nil : $0 }
+                    ))
+                    .textFieldStyle(RoundedBorderTextFieldStyle())
+                    
+                    TextField("Custom Lens Template", text: Binding(
+                        get: { config.exifPills.customLensText ?? "" },
+                        set: { config.exifPills.customLensText = $0.isEmpty ? nil : $0 }
+                    ))
+                    .textFieldStyle(RoundedBorderTextFieldStyle())
                 }
                 
                 Divider()
@@ -279,6 +377,67 @@ struct ContentView: View {
         }
     }
     
+    // Logo Controls View
+    private var logoControls: some View {
+        VStack(alignment: .leading, spacing: 14) {
+            Text("Brand Logo")
+                .font(.headline)
+            
+            HStack {
+                Text("Select Logo Image")
+                Spacer()
+                PhotosPicker(selection: $selectedLogoItem, matching: .images) {
+                    Text(logoImage == nil ? "Choose Image" : "Replace")
+                        .font(.subheadline)
+                        .bold()
+                        .padding(.horizontal, 12)
+                        .padding(.vertical, 6)
+                        .background(Color.blue.opacity(0.15))
+                        .cornerRadius(6)
+                }
+            }
+            
+            if let logo = logoImage {
+                HStack {
+                    Image(uiImage: logo)
+                        .resizable()
+                        .scaledToFit()
+                        .frame(width: 50, height: 50)
+                        .background(Color.black.opacity(0.05))
+                        .cornerRadius(6)
+                    
+                    Button(action: {
+                        logoImage = nil
+                        selectedLogoItem = nil
+                        triggerRender()
+                    }) {
+                        Text("Remove Logo")
+                            .font(.caption)
+                            .foregroundColor(.red)
+                    }
+                }
+                
+                Divider()
+                
+                Group {
+                    Text("Logo Position")
+                        .font(.caption)
+                        .foregroundColor(.secondary)
+                    Picker("Position", selection: $config.logo.position) {
+                        ForEach(["Top Left", "Top Center", "Top Right", "Middle Left", "Center", "Middle Right", "Bottom Left", "Bottom Center", "Bottom Right"], id: \.self) { pos in
+                            Text(pos).tag(pos)
+                        }
+                    }
+                    .pickerStyle(MenuPickerStyle())
+                }
+                
+                SliderRow(title: "Logo Size", value: $config.logo.sizeScale, range: 0.01...0.20, step: 0.005)
+                SliderRow(title: "Offset X", value: $config.logo.offsetXScale, range: -0.3...0.3, step: 0.005)
+                SliderRow(title: "Offset Y", value: $config.logo.offsetYScale, range: -0.3...0.3, step: 0.005)
+            }
+        }
+    }
+    
     // Export Controls
     private var exportControls: some View {
         VStack(alignment: .leading, spacing: 14) {
@@ -299,16 +458,87 @@ struct ContentView: View {
         }
     }
     
-    // Helper to load image
-    private func loadSelectedPhoto() {
-        guard let selectedItem = selectedItem else { return }
+    // Apply Preset Settings
+    private func applyPreset(_ name: String) {
+        switch name {
+        case "polaroid":
+            config.layout.aspectRatio = "1:1"
+            config.layout.backgroundType = .blurredImage
+            config.layout.backgroundBlurScale = 0.02
+            config.layout.innerBorderMode = "polaroid"
+            config.layout.innerBorderSideScale = 0.02
+            config.layout.innerBorderTopScale = 0.02
+            config.layout.innerBorderBottomScale = 0.12
+            config.layout.borderWidthScale = 0.05
+            if config.labels.count >= 2 {
+                config.labels[0].position = "Bottom Left"
+                config.labels[0].positionXScale = 0.05
+                config.labels[0].positionYScale = -0.075
+                config.labels[0].show = true
+                
+                config.labels[1].position = "Bottom Left"
+                config.labels[1].positionXScale = 0.05
+                config.labels[1].positionYScale = -0.045
+                config.labels[1].show = true
+            }
+            config.exifPills.position = "Bottom Center"
+            config.exifPills.positionYScale = 0.02
+            config.exifPills.show = true
+        case "museum":
+            config.layout.aspectRatio = "Original"
+            config.layout.backgroundType = .color
+            config.layout.backgroundColor = "#FFFFFF"
+            config.layout.innerBorderMode = "uniform"
+            config.layout.innerBorderSideScale = 0.05
+            config.layout.innerBorderTopScale = 0.05
+            config.layout.innerBorderBottomScale = 0.05
+            config.layout.borderWidthScale = 0.08
+            if config.labels.count >= 2 {
+                config.labels[0].position = "Bottom Left"
+                config.labels[0].positionXScale = 0.05
+                config.labels[0].positionYScale = -0.075
+                config.labels[0].show = true
+                
+                config.labels[1].position = "Bottom Left"
+                config.labels[1].positionXScale = 0.05
+                config.labels[1].positionYScale = -0.045
+                config.labels[1].show = true
+            }
+            config.exifPills.position = "Bottom Center"
+            config.exifPills.positionYScale = 0.05
+            config.exifPills.show = true
+        case "minimal":
+            config.layout.aspectRatio = "Original"
+            config.layout.backgroundType = .color
+            config.layout.backgroundColor = "#FFFFFF"
+            config.layout.innerBorderMode = "uniform"
+            config.layout.innerBorderSideScale = 0.0
+            config.layout.innerBorderTopScale = 0.0
+            config.layout.innerBorderBottomScale = 0.0
+            config.layout.borderWidthScale = 0.03
+            for index in 0..<config.labels.count {
+                config.labels[index].show = false
+            }
+            config.exifPills.show = false
+        default:
+            break
+        }
+    }
+    
+    // Helper to load multiple images
+    private func loadSelectedPhotos() {
+        guard !selectedItems.isEmpty else { return }
         isProcessing = true
         
-        selectedItem.loadTransferable(type: Data.self) { result in
-            DispatchQueue.main.async {
+        let dispatchGroup = DispatchGroup()
+        var newItems: [ImageItem] = []
+        var newDataMap: [UUID: Data] = [:]
+        
+        for photosItem in selectedItems {
+            dispatchGroup.enter()
+            photosItem.loadTransferable(type: Data.self) { result in
                 switch result {
                 case .success(let data?):
-                    self.originalData = data
                     if let uiImage = UIImage(data: data) {
                         let exif = EXIFHelper.readEXIF(from: data)
                         let item = ImageItem(
@@ -318,13 +548,39 @@ struct ContentView: View {
                             height: uiImage.size.height,
                             exif: exif
                         )
-                        self.imageItem = item
+                        newItems.append(item)
+                        newDataMap[item.id] = data
+                    }
+                default:
+                    break
+                }
+                dispatchGroup.leave()
+            }
+        }
+        
+        dispatchGroup.notify(queue: .main) {
+            self.imageItems = newItems
+            self.originalDataMap = newDataMap
+            self.activeImageIndex = 0
+            self.triggerRender()
+        }
+    }
+    
+    // Helper to load logo image
+    private func loadLogoPhoto() {
+        guard let selectedLogoItem = selectedLogoItem else { return }
+        isProcessing = true
+        
+        selectedLogoItem.loadTransferable(type: Data.self) { result in
+            DispatchQueue.main.async {
+                switch result {
+                case .success(let data?):
+                    if let uiImage = UIImage(data: data) {
+                        self.logoImage = uiImage
                         self.triggerRender()
                     } else {
                         self.isProcessing = false
                     }
-                case .failure:
-                    self.isProcessing = false
                 default:
                     self.isProcessing = false
                 }
@@ -332,55 +588,84 @@ struct ContentView: View {
         }
     }
     
-    // Helper to trigger renderer asynchronously
+    // Helper to trigger renderer asynchronously with cancellation & debounce
     private func triggerRender() {
-        guard let item = imageItem else { return }
+        guard activeImageIndex < imageItems.count else {
+            self.isProcessing = false
+            return
+        }
+        
+        let item = imageItems[activeImageIndex]
+        
+        renderTask?.cancel()
         isProcessing = true
         
-        DispatchQueue.global(qos: .userInteractive).async {
-            let rendered = BorderRenderer.render(imageItem: item, config: self.config, isPreview: true)
-            DispatchQueue.main.async {
+        renderTask = Task.detached(priority: .userInteractive) {
+            // Debounce for 50ms to ignore rapid slider values during drags
+            try? await Task.sleep(nanoseconds: 50_000_000)
+            
+            if Task.isCancelled { return }
+            
+            let rendered = BorderRenderer.render(imageItem: item, config: self.config, logo: self.logoImage, isPreview: true)
+            
+            if Task.isCancelled { return }
+            
+            await MainActor.run {
                 self.previewImage = rendered
                 self.isProcessing = false
             }
         }
     }
     
-    // Save image with EXIF re-injection
+    // Save images (handles batch processing for all photos in list)
     private func exportAndSave() {
-        guard let item = imageItem else { return }
+        guard !imageItems.isEmpty else { return }
         isProcessing = true
         
         DispatchQueue.global(qos: .userInitiated).async {
-            // Render at full output resolution limit
-            let fullResImage = BorderRenderer.render(imageItem: item, config: self.config, isPreview: false)
+            var saveCount = 0
+            var failedCount = 0
+            let dispatchGroup = DispatchGroup()
             
-            // Re-inject EXIF data
-            guard let finalData = EXIFHelper.writeEXIF(to: fullResImage, originalData: self.originalData, quality: self.config.export.quality) else {
-                DispatchQueue.main.async {
-                    self.isProcessing = false
-                    self.exportMessage = "Failed to inject EXIF properties."
-                    self.showingExportAlert = true
+            for item in self.imageItems {
+                dispatchGroup.enter()
+                
+                // Render at full output resolution limit
+                let fullResImage = BorderRenderer.render(imageItem: item, config: self.config, logo: self.logoImage, isPreview: false)
+                
+                // Re-inject EXIF data
+                let originalData = self.originalDataMap[item.id]
+                guard let finalData = EXIFHelper.writeEXIF(to: fullResImage, originalData: originalData, quality: self.config.export.quality) else {
+                    failedCount += 1
+                    dispatchGroup.leave()
+                    continue
                 }
-                return
-            }
-            
-            // Write to Photos Album
-            guard let finalImage = UIImage(data: finalData) else { return }
-            
-            PHPhotoLibrary.requestAuthorization(for: .addOnly) { status in
-                DispatchQueue.main.async {
+                
+                guard let finalImage = UIImage(data: finalData) else {
+                    failedCount += 1
+                    dispatchGroup.leave()
+                    continue
+                }
+                
+                PHPhotoLibrary.requestAuthorization(for: .addOnly) { status in
                     if status == .authorized || status == .limited {
                         UIImageWriteToSavedPhotosAlbum(finalImage, nil, nil, nil)
-                        self.isProcessing = false
-                        self.exportMessage = "Image successfully saved to camera roll!"
-                        self.showingExportAlert = true
+                        saveCount += 1
                     } else {
-                        self.isProcessing = false
-                        self.exportMessage = "Permission denied. Please enable Photo Library access in Settings."
-                        self.showingExportAlert = true
+                        failedCount += 1
                     }
+                    dispatchGroup.leave()
                 }
+            }
+            
+            dispatchGroup.notify(queue: .main) {
+                self.isProcessing = false
+                if failedCount == 0 {
+                    self.exportMessage = "Successfully saved all \(saveCount) photos to your camera roll!"
+                } else {
+                    self.exportMessage = "Saved \(saveCount) photos. Failed to save \(failedCount) photos due to errors or permission denials."
+                }
+                self.showingExportAlert = true
             }
         }
     }
@@ -415,20 +700,20 @@ extension Color {
         let hex = hex.trimmingCharacters(in: CharacterSet.alphanumerics.inverted)
         var int: UInt64 = 0
         Scanner(string: hex).scanHexInt64(&int)
-        let r, g, b: UInt64
+        let redVal, greenVal, blueVal: UInt64
         switch hex.count {
         case 3: // RGB (12-bit)
-            (r, g, b) = ((int >> 8) * 17, (int >> 4 & 0xF) * 17, (int & 0xF) * 17)
+            (redVal, greenVal, blueVal) = ((int >> 8) * 17, (int >> 4 & 0xF) * 17, (int & 0xF) * 17)
         case 6: // RGB (24-bit)
-            (r, g, b) = (int >> 16, int >> 8 & 0xFF, int & 0xFF)
+            (redVal, greenVal, blueVal) = (int >> 16, int >> 8 & 0xFF, int & 0xFF)
         default:
-            (r, g, b) = (255, 255, 255)
+            (redVal, greenVal, blueVal) = (255, 255, 255)
         }
         self.init(
             .sRGB,
-            red: Double(r) / 255,
-            green: Double(g) / 255,
-            blue: Double(b) / 255,
+            red: Double(redVal) / 255,
+            green: Double(greenVal) / 255,
+            blue: Double(blueVal) / 255,
             opacity: 1
         )
     }
@@ -437,9 +722,9 @@ extension Color {
         guard let components = UIColor(self).cgColor.components, components.count >= 3 else {
             return "#FFFFFF"
         }
-        let r = Float(components[0])
-        let g = Float(components[1])
-        let b = Float(components[2])
-        return String(format: "#%02lX%02lX%02lX", lroundf(r * 255), lroundf(g * 255), lroundf(b * 255))
+        let redVal = Float(components[0])
+        let greenVal = Float(components[1])
+        let blueVal = Float(components[2])
+        return String(format: "#%02lX%02lX%02lX", lroundf(redVal * 255), lroundf(greenVal * 255), lroundf(blueVal * 255))
     }
 }

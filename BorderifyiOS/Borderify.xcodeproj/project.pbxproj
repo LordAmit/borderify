@@ -7,20 +7,43 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		076A207BCD3C184219AE1B22 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 51C7E2B2861A7A33EA796460 /* Assets.xcassets */; };
 		10F1FA5DAA7417662A9F0DEE /* BorderRenderer.swift in Sources */ = {isa = PBXBuildFile; fileRef = E83266E6E667FAC553F59E52 /* BorderRenderer.swift */; };
+		1EF7AE5ADEB2A60B0282A5C3 /* Borderify.xcodeproj in Resources */ = {isa = PBXBuildFile; fileRef = E3BF49B304904104592845E0 /* Borderify.xcodeproj */; };
+		45994DD489B0A0F50380EFB8 /* favicon.png in Resources */ = {isa = PBXBuildFile; fileRef = D2AD92FD5E45559DE0704229 /* favicon.png */; };
 		495FAC4636F08E13AFCCAF59 /* BorderifyApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 12EF79F353A58C25D5D57038 /* BorderifyApp.swift */; };
+		8ED2822E83D5B53212FF10D1 /* .swiftlint.yml in Resources */ = {isa = PBXBuildFile; fileRef = 9D900F6C77167450460C75EF /* .swiftlint.yml */; };
+		A2C515EE48E042F271C0DCC7 /* EXIFHelperTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 355486ACB8ADF18FC128F9F3 /* EXIFHelperTests.swift */; };
 		AA7B3B369CE2920464449926 /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 09CF1AD6457AE564913001A4 /* ContentView.swift */; };
 		B32056BF7C997B23C0AB9186 /* EXIFHelper.swift in Sources */ = {isa = PBXBuildFile; fileRef = F43357FC4FD1EE139D2809BB /* EXIFHelper.swift */; };
+		BA90100CBD520B08985E4C54 /* BorderRendererTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = CABC719E8C8F5CFC0EDB860F /* BorderRendererTests.swift */; };
 		D7511684D360F772D5883C44 /* Models.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6F8FD0E54DB1458C2D3C6596 /* Models.swift */; };
 /* End PBXBuildFile section */
+
+/* Begin PBXContainerItemProxy section */
+		2624B27B72A33B494DFB87D1 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = C2C947990D4112D5957C9CA0 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 2419C1A9BBE6E44DB276326E;
+			remoteInfo = Borderify;
+		};
+/* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
 		09CF1AD6457AE564913001A4 /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
 		12EF79F353A58C25D5D57038 /* BorderifyApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BorderifyApp.swift; sourceTree = "<group>"; };
+		355486ACB8ADF18FC128F9F3 /* EXIFHelperTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EXIFHelperTests.swift; sourceTree = "<group>"; };
 		384C1FF3C51D8DD8CBA6651A /* Borderify.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Borderify.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		51C7E2B2861A7A33EA796460 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		6F8FD0E54DB1458C2D3C6596 /* Models.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Models.swift; sourceTree = "<group>"; };
+		9D900F6C77167450460C75EF /* .swiftlint.yml */ = {isa = PBXFileReference; lastKnownFileType = text.yaml; path = .swiftlint.yml; sourceTree = "<group>"; };
+		CABC719E8C8F5CFC0EDB860F /* BorderRendererTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BorderRendererTests.swift; sourceTree = "<group>"; };
+		D2AD92FD5E45559DE0704229 /* favicon.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = favicon.png; sourceTree = "<group>"; };
+		E3BF49B304904104592845E0 /* Borderify.xcodeproj */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.pb-project"; path = Borderify.xcodeproj; sourceTree = "<group>"; };
 		E83266E6E667FAC553F59E52 /* BorderRenderer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BorderRenderer.swift; sourceTree = "<group>"; };
 		F43357FC4FD1EE139D2809BB /* EXIFHelper.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EXIFHelper.swift; sourceTree = "<group>"; };
+		F9829032BA3C918A728270F7 /* BorderifyTests.xctest */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.cfbundle; path = BorderifyTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
 /* Begin PBXGroup section */
@@ -28,6 +51,7 @@
 			isa = PBXGroup;
 			children = (
 				384C1FF3C51D8DD8CBA6651A /* Borderify.app */,
+				F9829032BA3C918A728270F7 /* BorderifyTests.xctest */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -36,6 +60,7 @@
 			isa = PBXGroup;
 			children = (
 				7ABD367F8DF95F1EC9137F56 /* BorderifyiOS */,
+				E5398A063302F40E8F6F1417 /* BorderifyTests */,
 				27195CEB261F55B1CF223C00 /* Products */,
 			);
 			sourceTree = "<group>";
@@ -43,14 +68,32 @@
 		7ABD367F8DF95F1EC9137F56 /* BorderifyiOS */ = {
 			isa = PBXGroup;
 			children = (
+				9D900F6C77167450460C75EF /* .swiftlint.yml */,
+				51C7E2B2861A7A33EA796460 /* Assets.xcassets */,
+				E3BF49B304904104592845E0 /* Borderify.xcodeproj */,
 				12EF79F353A58C25D5D57038 /* BorderifyApp.swift */,
 				E83266E6E667FAC553F59E52 /* BorderRenderer.swift */,
 				09CF1AD6457AE564913001A4 /* ContentView.swift */,
 				F43357FC4FD1EE139D2809BB /* EXIFHelper.swift */,
+				D2AD92FD5E45559DE0704229 /* favicon.png */,
 				6F8FD0E54DB1458C2D3C6596 /* Models.swift */,
 			);
 			name = BorderifyiOS;
 			path = .;
+			sourceTree = "<group>";
+		};
+		E5398A063302F40E8F6F1417 /* BorderifyTests */ = {
+			isa = PBXGroup;
+			children = (
+				CABC719E8C8F5CFC0EDB860F /* BorderRendererTests.swift */,
+				355486ACB8ADF18FC128F9F3 /* EXIFHelperTests.swift */,
+			);
+			path = BorderifyTests;
+			sourceTree = "<group>";
+		};
+		F82032173009A3BC007DA234 /* Products */ = {
+			isa = PBXGroup;
+			name = Products;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -61,6 +104,8 @@
 			buildConfigurationList = 1F95DD45E64AD07F6218E586 /* Build configuration list for PBXNativeTarget "Borderify" */;
 			buildPhases = (
 				0C44C6A799F874DCB9BA1050 /* Sources */,
+				592BFFC22A1E28BFB4F5057E /* Resources */,
+				6A427A23A7BB78CB3CE0DCFB /* SwiftLint */,
 			);
 			buildRules = (
 			);
@@ -72,6 +117,24 @@
 			productName = Borderify;
 			productReference = 384C1FF3C51D8DD8CBA6651A /* Borderify.app */;
 			productType = "com.apple.product-type.application";
+		};
+		42F45399011687FC242D4491 /* BorderifyTests */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = B8872D63AB23085131734746 /* Build configuration list for PBXNativeTarget "BorderifyTests" */;
+			buildPhases = (
+				6830D5B1F2572D3A45E969F7 /* Sources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				8D8D6B8047143C80E0AD31B8 /* PBXTargetDependency */,
+			);
+			name = BorderifyTests;
+			packageProductDependencies = (
+			);
+			productName = BorderifyTests;
+			productReference = F9829032BA3C918A728270F7 /* BorderifyTests.xctest */;
+			productType = "com.apple.product-type.bundle.unit-test";
 		};
 /* End PBXNativeTarget section */
 
@@ -94,12 +157,54 @@
 			preferredProjectObjectVersion = 77;
 			productRefGroup = 27195CEB261F55B1CF223C00 /* Products */;
 			projectDirPath = "";
+			projectReferences = (
+				{
+					ProductGroup = F82032173009A3BC007DA234 /* Products */;
+					ProjectRef = E3BF49B304904104592845E0 /* Borderify.xcodeproj */;
+				},
+			);
 			projectRoot = "";
 			targets = (
 				2419C1A9BBE6E44DB276326E /* Borderify */,
+				42F45399011687FC242D4491 /* BorderifyTests */,
 			);
 		};
 /* End PBXProject section */
+
+/* Begin PBXResourcesBuildPhase section */
+		592BFFC22A1E28BFB4F5057E /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				8ED2822E83D5B53212FF10D1 /* .swiftlint.yml in Resources */,
+				076A207BCD3C184219AE1B22 /* Assets.xcassets in Resources */,
+				1EF7AE5ADEB2A60B0282A5C3 /* Borderify.xcodeproj in Resources */,
+				45994DD489B0A0F50380EFB8 /* favicon.png in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXResourcesBuildPhase section */
+
+/* Begin PBXShellScriptBuildPhase section */
+		6A427A23A7BB78CB3CE0DCFB /* SwiftLint */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputFileListPaths = (
+			);
+			inputPaths = (
+			);
+			name = SwiftLint;
+			outputFileListPaths = (
+			);
+			outputPaths = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "if which swiftlint >/dev/null; then\n  swiftlint\nelse\n  echo \"warning: SwiftLint not installed, download from https://github.com/realm/SwiftLint\"\nfi\n";
+		};
+/* End PBXShellScriptBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
 		0C44C6A799F874DCB9BA1050 /* Sources */ = {
@@ -114,9 +219,44 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		6830D5B1F2572D3A45E969F7 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				BA90100CBD520B08985E4C54 /* BorderRendererTests.swift in Sources */,
+				A2C515EE48E042F271C0DCC7 /* EXIFHelperTests.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXSourcesBuildPhase section */
 
+/* Begin PBXTargetDependency section */
+		8D8D6B8047143C80E0AD31B8 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 2419C1A9BBE6E44DB276326E /* Borderify */;
+			targetProxy = 2624B27B72A33B494DFB87D1 /* PBXContainerItemProxy */;
+		};
+/* End PBXTargetDependency section */
+
 /* Begin XCBuildConfiguration section */
+		22829846E0F5D7F6A950AEDA /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				GENERATE_INFOPLIST_FILE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 16.0;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@loader_path/Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = com.lordamit.BorderifyTests;
+				SDKROOT = iphoneos;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/Borderify.app/Borderify";
+			};
+			name = Release;
+		};
 		3F610893F538A803BA0768B2 /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
@@ -138,6 +278,24 @@
 				TARGETED_DEVICE_FAMILY = "1,2";
 			};
 			name = Release;
+		};
+		48160B94FF4FAAE7A906DF2E /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				GENERATE_INFOPLIST_FILE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 16.0;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@loader_path/Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = com.lordamit.BorderifyTests;
+				SDKROOT = iphoneos;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/Borderify.app/Borderify";
+			};
+			name = Debug;
 		};
 		62A31ADB776AA74E1A5677E0 /* Release */ = {
 			isa = XCBuildConfiguration;
@@ -295,6 +453,15 @@
 			buildConfigurations = (
 				909AE6B70BD3A9207B6E576B /* Debug */,
 				62A31ADB776AA74E1A5677E0 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+		B8872D63AB23085131734746 /* Build configuration list for PBXNativeTarget "BorderifyTests" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				48160B94FF4FAAE7A906DF2E /* Debug */,
+				22829846E0F5D7F6A950AEDA /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Debug;

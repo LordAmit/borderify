@@ -3,13 +3,25 @@ import SwiftUI
 import CoreImage
 import CoreGraphics
 
+struct TextAnchor {
+    let xCoordinate: CGFloat
+    let yCoordinate: CGFloat
+    let alignment: NSTextAlignment
+}
+
+struct MeasuredPill {
+    let topText: String
+    let bottomText: String
+    let width: CGFloat
+}
+
 struct BorderRenderer {
     
     // Main render entry point
     static func render(imageItem: ImageItem, config: AppConfig, logo: UIImage? = nil, isPreview: Bool = false) -> UIImage {
-        let img = imageItem.uiImage
-        let originalW = img.size.width
-        let originalH = img.size.height
+        let image = imageItem.uiImage
+        let originalWidth = image.size.width
+        let originalHeight = image.size.height
         
         // 1. Determine target resolution limit
         var maxRes: CGFloat = 8000
@@ -25,13 +37,13 @@ struct BorderRenderer {
         }
         
         var scaleLimit: CGFloat = 1.0
-        let longestEdge = max(originalW, originalH)
+        let longestEdge = max(originalWidth, originalHeight)
         if longestEdge > maxRes {
             scaleLimit = maxRes / longestEdge
         }
         
         // 2. Determine target ratio
-        var targetRatio = originalW / originalH
+        var targetRatio = originalWidth / originalHeight
         if config.layout.aspectRatio != "Original" {
             let parts = config.layout.aspectRatio.split(separator: ":").compactMap { Double($0) }
             if parts.count == 2 {
@@ -40,24 +52,24 @@ struct BorderRenderer {
         }
         
         let baseLength = longestEdge * scaleLimit
-        var cWidth: CGFloat = 0
-        var cHeight: CGFloat = 0
+        var canvasWidth: CGFloat = 0
+        var canvasHeight: CGFloat = 0
         
         if targetRatio > 1.0 {
-            cWidth = baseLength
-            cHeight = baseLength / targetRatio
+            canvasWidth = baseLength
+            canvasHeight = baseLength / targetRatio
         } else {
-            cHeight = baseLength
-            cWidth = baseLength * targetRatio
+            canvasHeight = baseLength
+            canvasWidth = baseLength * targetRatio
         }
         
-        let minEdge = min(cWidth, cHeight)
+        let minEdge = min(canvasWidth, canvasHeight)
         let outerPadding = minEdge * CGFloat(config.layout.borderWidthScale)
         
         // 3. Render Canvas
         let format = UIGraphicsImageRendererFormat()
         format.scale = 1.0
-        let renderer = UIGraphicsImageRenderer(size: CGSize(width: cWidth, height: cHeight), format: format)
+        let renderer = UIGraphicsImageRenderer(size: CGSize(width: canvasWidth, height: canvasHeight), format: format)
         
         let renderedImage = renderer.image { rendererContext in
             let ctx = rendererContext.cgContext
@@ -65,48 +77,48 @@ struct BorderRenderer {
             // Draw background
             if config.layout.backgroundType == .color {
                 ctx.setFillColor(UIColor(hex: config.layout.backgroundColor).cgColor)
-                ctx.fill(CGRect(x: 0, y: 0, width: cWidth, height: cHeight))
+                ctx.fill(CGRect(x: 0, y: 0, width: canvasWidth, height: canvasHeight))
             } else {
                 if let blurredBackground = createBlurredBackground(
-                    img: img,
-                    width: cWidth,
-                    height: cHeight,
+                    img: image,
+                    width: canvasWidth,
+                    height: canvasHeight,
                     blurScale: config.layout.backgroundBlurScale,
                     dimScale: config.layout.backgroundDimScale
                 ) {
-                    blurredBackground.draw(in: CGRect(x: 0, y: 0, width: cWidth, height: cHeight))
+                    blurredBackground.draw(in: CGRect(x: 0, y: 0, width: canvasWidth, height: canvasHeight))
                 }
             }
             
             // Calculate sizes for inner card
-            let boxW = cWidth - (outerPadding * 2)
-            let boxH = cHeight - (outerPadding * 2)
+            let boxWidth = canvasWidth - (outerPadding * 2)
+            let boxHeight = canvasHeight - (outerPadding * 2)
             
             let innerPadTop = baseLength * CGFloat(config.layout.innerBorderTopScale)
             let innerPadBottom = baseLength * CGFloat(config.layout.innerBorderBottomScale)
             let innerPadSide = baseLength * CGFloat(config.layout.innerBorderSideScale)
             
-            let imgRatio = originalW / originalH
+            let imgRatio = originalWidth / originalHeight
             let photoPadding = baseLength * CGFloat(config.layout.imagePaddingScale)
             
-            let availableImgW = boxW - (innerPadSide * 2) - (photoPadding * 2)
-            let availableImgH = boxH - (innerPadTop + innerPadBottom) - (photoPadding * 2)
+            let availableImgW = boxWidth - (innerPadSide * 2) - (photoPadding * 2)
+            let availableImgH = boxHeight - (innerPadTop + innerPadBottom) - (photoPadding * 2)
             
-            var drawImgW: CGFloat = 0
-            var drawImgH: CGFloat = 0
+            var photoWidth: CGFloat = 0
+            var photoHeight: CGFloat = 0
             if imgRatio > (availableImgW / availableImgH) {
-                drawImgW = availableImgW
-                drawImgH = availableImgW / imgRatio
+                photoWidth = availableImgW
+                photoHeight = availableImgW / imgRatio
             } else {
-                drawImgH = availableImgH
-                drawImgW = availableImgH * imgRatio
+                photoHeight = availableImgH
+                photoWidth = availableImgH * imgRatio
             }
             
-            let cardW = drawImgW + (innerPadSide * 2) + (photoPadding * 2)
-            let cardH = drawImgH + innerPadTop + innerPadBottom + (photoPadding * 2)
+            let cardWidth = photoWidth + (innerPadSide * 2) + (photoPadding * 2)
+            let cardHeight = photoHeight + innerPadTop + innerPadBottom + (photoPadding * 2)
             
-            let cardX = (cWidth - cardW) / 2
-            let cardY = (cHeight - cardH) / 2
+            let cardXPosition = (canvasWidth - cardWidth) / 2
+            let cardYPosition = (canvasHeight - cardHeight) / 2
             
             // Draw Inner Card Border
             ctx.saveGState()
@@ -122,7 +134,7 @@ struct BorderRenderer {
             }
             
             ctx.setFillColor(UIColor(hex: config.layout.innerBorderColor).cgColor)
-            let cardRect = CGRect(x: cardX, y: cardY, width: cardW, height: cardH)
+            let cardRect = CGRect(x: cardXPosition, y: cardYPosition, width: cardWidth, height: cardHeight)
             if radius > 0 {
                 let path = UIBezierPath(roundedRect: cardRect, cornerRadius: radius)
                 ctx.addPath(path.cgPath)
@@ -133,9 +145,9 @@ struct BorderRenderer {
             ctx.restoreGState()
             
             // Draw Actual Photo
-            let photoX = cardX + innerPadSide + photoPadding
-            let photoY = cardY + innerPadTop + photoPadding
-            let photoRect = CGRect(x: photoX, y: photoY, width: drawImgW, height: drawImgH)
+            let photoXPosition = cardXPosition + innerPadSide + photoPadding
+            let photoYPosition = cardYPosition + innerPadTop + photoPadding
+            let photoRect = CGRect(x: photoXPosition, y: photoYPosition, width: photoWidth, height: photoHeight)
             
             ctx.saveGState()
             let photoRadius = baseLength * CGFloat(config.layout.innerImageRadiusScale)
@@ -165,7 +177,7 @@ struct BorderRenderer {
                 ctx.clip()
             }
             
-            img.draw(in: photoRect)
+            image.draw(in: photoRect)
             ctx.restoreGState()
             
             // Draw photo border stroke
@@ -189,11 +201,11 @@ struct BorderRenderer {
                 ctx: ctx,
                 image: imageItem,
                 config: config,
-                cardX: cardX,
-                cardY: cardY,
-                cardW: cardW,
-                cardH: cardH,
-                drawImgH: drawImgH,
+                cardX: cardXPosition,
+                cardY: cardYPosition,
+                cardW: cardWidth,
+                cardH: cardHeight,
+                drawImgH: photoHeight,
                 innerPadTop: innerPadTop,
                 innerPadBottom: innerPadBottom,
                 innerPadSide: innerPadSide,
@@ -205,11 +217,11 @@ struct BorderRenderer {
                 ctx: ctx,
                 image: imageItem,
                 config: config,
-                cardX: cardX,
-                cardY: cardY,
-                cardW: cardW,
-                cardH: cardH,
-                drawImgH: drawImgH,
+                cardX: cardXPosition,
+                cardY: cardYPosition,
+                cardW: cardWidth,
+                cardH: cardHeight,
+                drawImgH: photoHeight,
                 innerPadTop: innerPadTop,
                 innerPadBottom: innerPadBottom,
                 innerPadSide: innerPadSide,
@@ -222,11 +234,11 @@ struct BorderRenderer {
                     ctx: ctx,
                     logo: logoImg,
                     config: config,
-                    cardX: cardX,
-                    cardY: cardY,
-                    cardW: cardW,
-                    cardH: cardH,
-                    drawImgH: drawImgH,
+                    cardX: cardXPosition,
+                    cardY: cardYPosition,
+                    cardW: cardWidth,
+                    cardH: cardHeight,
+                    drawImgH: photoHeight,
                     innerPadTop: innerPadTop,
                     innerPadBottom: innerPadBottom,
                     innerPadSide: innerPadSide,
@@ -283,19 +295,19 @@ struct BorderRenderer {
         let containerRatio = containerSize.width / containerSize.height
         let imageRatio = imageSize.width / imageSize.height
         
-        var w: CGFloat = 0
-        var h: CGFloat = 0
+        var targetWidth: CGFloat = 0
+        var targetHeight: CGFloat = 0
         if containerRatio > imageRatio {
-            w = containerSize.width
-            h = containerSize.width / imageRatio
+            targetWidth = containerSize.width
+            targetHeight = containerSize.width / imageRatio
         } else {
-            h = containerSize.height
-            w = containerSize.height * imageRatio
+            targetHeight = containerSize.height
+            targetWidth = containerSize.height * imageRatio
         }
         
-        let x = (containerSize.width - w) / 2
-        let y = (containerSize.height - h) / 2
-        return CGRect(x: x, y: y, width: w, height: h)
+        let xOffset = (containerSize.width - targetWidth) / 2
+        let yOffset = (containerSize.height - targetHeight) / 2
+        return CGRect(x: xOffset, y: yOffset, width: targetWidth, height: targetHeight)
     }
     
     // Resolve Text Tokens
@@ -334,28 +346,28 @@ struct BorderRenderer {
         padBottom: CGFloat,
         padSide: CGFloat,
         position: String
-    ) -> (x: CGFloat, y: CGFloat, align: NSTextAlignment) {
+    ) -> TextAnchor {
         switch position {
         case "Top Left":
-            return (padSide / 2, padTop / 2, .left)
+            return TextAnchor(xCoordinate: padSide / 2, yCoordinate: padTop / 2, alignment: .left)
         case "Top Center":
-            return (cardW / 2, padTop / 2, .center)
+            return TextAnchor(xCoordinate: cardW / 2, yCoordinate: padTop / 2, alignment: .center)
         case "Top Right":
-            return (cardW - (padSide / 2), padTop / 2, .right)
+            return TextAnchor(xCoordinate: cardW - (padSide / 2), yCoordinate: padTop / 2, alignment: .right)
         case "Middle Left":
-            return (padSide / 2, padTop + (imgH / 2), .left)
+            return TextAnchor(xCoordinate: padSide / 2, yCoordinate: padTop + (imgH / 2), alignment: .left)
         case "Center":
-            return (cardW / 2, padTop + (imgH / 2), .center)
+            return TextAnchor(xCoordinate: cardW / 2, yCoordinate: padTop + (imgH / 2), alignment: .center)
         case "Middle Right":
-            return (cardW - (padSide / 2), padTop + (imgH / 2), .right)
+            return TextAnchor(xCoordinate: cardW - (padSide / 2), yCoordinate: padTop + (imgH / 2), alignment: .right)
         case "Bottom Left":
-            return (padSide / 2, cardH - (padBottom / 2), .left)
+            return TextAnchor(xCoordinate: padSide / 2, yCoordinate: cardH - (padBottom / 2), alignment: .left)
         case "Bottom Center":
-            return (cardW / 2, cardH - (padBottom / 2), .center)
+            return TextAnchor(xCoordinate: cardW / 2, yCoordinate: cardH - (padBottom / 2), alignment: .center)
         case "Bottom Right":
-            return (cardW - (padSide / 2), cardH - (padBottom / 2), .right)
+            return TextAnchor(xCoordinate: cardW - (padSide / 2), yCoordinate: cardH - (padBottom / 2), alignment: .right)
         default:
-            return (cardW / 2, cardH - (padBottom / 2), .center)
+            return TextAnchor(xCoordinate: cardW / 2, yCoordinate: cardH - (padBottom / 2), alignment: .center)
         }
     }
     
@@ -378,10 +390,10 @@ struct BorderRenderer {
         var pairs: [(top: String, bottom: String)] = []
         let exif = image.exif
         
-        if config.exifPills.showFocal, let f = exif.focalLength { pairs.push((String(format: "%.0f", f), "mm")) }
-        if config.exifPills.showAperture, let ap = exif.fNumber { pairs.push((String(format: "%.1f", ap), "F")) }
+        if config.exifPills.showFocal, let focalLength = exif.focalLength { pairs.push((String(format: "%.0f", focalLength), "mm")) }
+        if config.exifPills.showAperture, let aperture = exif.fNumber { pairs.push((String(format: "%.1f", aperture), "F")) }
         if config.exifPills.showIso, let iso = exif.iso { pairs.push(("\(iso)", "ISO")) }
-        if config.exifPills.showShutter, let sh = exif.exposureTime { pairs.push((sh, "S")) }
+        if config.exifPills.showShutter, let shutterSpeed = exif.exposureTime { pairs.push((shutterSpeed, "S")) }
         
         let lensText = resolveTemplate(config.exifPills.customLensText ?? "{lens}", exif: exif)
         if config.exifPills.showLens && !lensText.isEmpty { pairs.push((lensText, "LENS")) }
@@ -389,7 +401,7 @@ struct BorderRenderer {
         let cameraText = resolveTemplate(config.exifPills.customCameraText ?? "{make} {model}", exif: exif)
         if config.exifPills.showCamera && !cameraText.isEmpty { pairs.push((cameraText, "CAMERA")) }
         
-        if config.exifPills.showDate, let dt = exif.date { pairs.push((dt, "DATE")) }
+        if config.exifPills.showDate, let dateText = exif.date { pairs.push((dateText, "DATE")) }
         
         guard !pairs.isEmpty else { return }
         
@@ -401,15 +413,15 @@ struct BorderRenderer {
         let fontTop = UIFont.boldSystemFont(ofSize: fontSize)
         let fontBottom = UIFont.systemFont(ofSize: fontSize * 0.6)
         
-        var measuredPills: [(top: String, bottom: String, width: CGFloat)] = []
+        var measuredPills: [MeasuredPill] = []
         var totalWidth: CGFloat = 0
         
-        for p in pairs {
-            let topSize = p.top.size(withAttributes: [.font: fontTop])
-            let botSize = p.bottom.size(withAttributes: [.font: fontBottom])
-            let w = max(topSize.width, botSize.width) + (boxPadding * 2)
-            measuredPills.append((p.top, p.bottom, w))
-            totalWidth += w
+        for pair in pairs {
+            let topSize = pair.top.size(withAttributes: [.font: fontTop])
+            let botSize = pair.bottom.size(withAttributes: [.font: fontBottom])
+            let pillWidth = max(topSize.width, botSize.width) + (boxPadding * 2)
+            measuredPills.append(MeasuredPill(topText: pair.top, bottomText: pair.bottom, width: pillWidth))
+            totalWidth += pillWidth
         }
         totalWidth += gap * CGFloat(measuredPills.count - 1)
         
@@ -426,14 +438,14 @@ struct BorderRenderer {
         let offsetX = CGFloat(config.exifPills.positionXScale) * baseLength
         let offsetY = CGFloat(config.exifPills.positionYScale) * baseLength
         
-        var startX = cardX + anchor.x + offsetX
-        if anchor.align == .right {
+        var startX = cardX + anchor.xCoordinate + offsetX
+        if anchor.alignment == .right {
             startX -= totalWidth
-        } else if anchor.align == .center {
+        } else if anchor.alignment == .center {
             startX -= (totalWidth / 2)
         }
         
-        let startY = cardY + anchor.y + offsetY - (boxHeight / 2)
+        let startY = cardY + anchor.yCoordinate + offsetY - (boxHeight / 2)
         
         var currentX = startX
         for pill in measuredPills {
@@ -478,7 +490,7 @@ struct BorderRenderer {
             }
             
             let topTextRect = CGRect(x: currentX, y: topY, width: pill.width, height: fontSize * 1.2)
-            pill.top.draw(in: topTextRect, withAttributes: topAttrs)
+            pill.topText.draw(in: topTextRect, withAttributes: topAttrs)
             
             // Draw Bottom Text
             let botStyle = NSMutableParagraphStyle()
@@ -496,7 +508,7 @@ struct BorderRenderer {
             }
             
             let botTextRect = CGRect(x: currentX, y: bottomY, width: pill.width, height: fontSize * 0.8 * 1.2)
-            pill.bottom.draw(in: botTextRect, withAttributes: botAttrs)
+            pill.bottomText.draw(in: botTextRect, withAttributes: botAttrs)
             
             ctx.restoreGState()
             currentX += pill.width + gap
@@ -546,10 +558,10 @@ struct BorderRenderer {
             let offsetX = baseLength * CGFloat(label.positionXScale)
             let offsetY = baseLength * CGFloat(label.positionYScale)
             
-            let strokeW = baseLength * CGFloat(label.strokeWidthScale)
+            let strokeWidth = baseLength * CGFloat(label.strokeWidthScale)
             
             let paragraphStyle = NSMutableParagraphStyle()
-            paragraphStyle.alignment = anchor.align
+            paragraphStyle.alignment = anchor.alignment
             
             var attrs: [NSAttributedString.Key: Any] = [
                 .font: font,
@@ -557,21 +569,21 @@ struct BorderRenderer {
                 .paragraphStyle: paragraphStyle
             ]
             
-            if strokeW > 0 {
+            if strokeWidth > 0 {
                 attrs[.strokeColor] = UIColor(hex: label.strokeColor)
-                attrs[.strokeWidth] = -strokeW
+                attrs[.strokeWidth] = -strokeWidth
             }
             
             let size = text.size(withAttributes: [.font: font])
-            var x = cardX + anchor.x + offsetX
-            if anchor.align == .right {
-                x -= size.width
-            } else if anchor.align == .center {
-                x -= (size.width / 2)
+            var xPosition = cardX + anchor.xCoordinate + offsetX
+            if anchor.alignment == .right {
+                xPosition -= size.width
+            } else if anchor.alignment == .center {
+                xPosition -= (size.width / 2)
             }
-            let y = cardY + anchor.y + offsetY - (size.height / 2)
+            let yPosition = cardY + anchor.yCoordinate + offsetY - (size.height / 2)
             
-            let textRect = CGRect(x: x, y: y, width: size.width, height: size.height)
+            let textRect = CGRect(x: xPosition, y: yPosition, width: size.width, height: size.height)
             text.draw(in: textRect, withAttributes: attrs)
         }
     }
@@ -590,8 +602,8 @@ struct BorderRenderer {
         innerPadSide: CGFloat,
         baseLength: CGFloat
     ) {
-        let logoH = baseLength * CGFloat(config.logo.sizeScale)
-        let logoW = logoH * (logo.size.width / logo.size.height)
+        let logoHeight = baseLength * CGFloat(config.logo.sizeScale)
+        let logoWidth = logoHeight * (logo.size.width / logo.size.height)
         
         let logoAnchor = getPreciseAnchor(
             cardW: cardW,
@@ -606,15 +618,15 @@ struct BorderRenderer {
         let logoOffsetX = baseLength * CGFloat(config.logo.offsetXScale)
         let logoOffsetY = baseLength * CGFloat(config.logo.offsetYScale)
         
-        var x = cardX + logoAnchor.x + logoOffsetX
-        if logoAnchor.align == .right {
-            x -= logoW
-        } else if logoAnchor.align == .center {
-            x -= (logoW / 2)
+        var xPosition = cardX + logoAnchor.xCoordinate + logoOffsetX
+        if logoAnchor.alignment == .right {
+            xPosition -= logoWidth
+        } else if logoAnchor.alignment == .center {
+            xPosition -= (logoWidth / 2)
         }
-        let y = cardY + logoAnchor.y + logoOffsetY - (logoH / 2)
+        let yPosition = cardY + logoAnchor.yCoordinate + logoOffsetY - (logoHeight / 2)
         
-        logo.draw(in: CGRect(x: x, y: y, width: logoW, height: logoH))
+        logo.draw(in: CGRect(x: xPosition, y: yPosition, width: logoWidth, height: logoHeight))
     }
 }
 

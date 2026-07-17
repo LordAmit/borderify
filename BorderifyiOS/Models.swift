@@ -29,7 +29,7 @@ enum BackgroundType: String, Codable {
 
 struct LayoutSettings: Codable, Equatable {
     var aspectRatio: String = "Original" // "Original", "1:1", "4:3", "3:4", "16:9", "9:16", "3:2", "2:3"
-    var backgroundColor: String = "#E5E5E5"
+    var backgroundColor: String = "#FFFFFF"
     var backgroundType: BackgroundType = .color
     var backgroundBlurScale: Double = 0.05
     var backgroundDimScale: Double = 0.0
@@ -81,8 +81,8 @@ struct ExifPillSettings: Codable, Equatable {
     var showAperture: Bool = true
     var showIso: Bool = true
     var showShutter: Bool = true
-    var showLens: Bool = true
-    var showCamera: Bool = true
+    var showLens: Bool = false
+    var showCamera: Bool = false
     var showDate: Bool = false
     var position: String = "Bottom Center"
     var positionXScale: Double = 0.0
