@@ -307,6 +307,21 @@ describe('useStore', () => {
     expect(result.current.state.activeImageId).toBe('1');
   });
 
+  it('[REQ-STAT-07] verifies default configuration of EXIF pills visibility', () => {
+    const wrapper = ({ children }: { children: React.ReactNode }) => <StoreProvider>{children}</StoreProvider>;
+    const { result } = renderHook(() => useStore(), { wrapper });
+    
+    const config = result.current.state.config;
+    expect(config.exifPills.showFocal).toBe(true);
+    expect(config.exifPills.showAperture).toBe(true);
+    expect(config.exifPills.showIso).toBe(true);
+    expect(config.exifPills.showShutter).toBe(true);
+    
+    expect(config.exifPills.showLens).toBe(false);
+    expect(config.exifPills.showCamera).toBe(false);
+    expect(config.exifPills.showDate).toBe(false);
+  });
+
   it('throws an error if useStore is used outside of StoreProvider', () => {
     const consoleErrorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
     expect(() => {

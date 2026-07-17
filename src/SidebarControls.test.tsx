@@ -443,5 +443,18 @@ describe('SidebarControls Settings Interactions', () => {
     expect(stateObj.photoBorderWidthScale).toBe(0.015);
     expect(stateObj.photoBorderColor).toBe('#ff00ff');
   });
+
+  it('[REQ-STAT-08] arranges customization drawers in specified order', () => {
+    setupTest();
+    const accordionButtons = screen.getAllByRole('button').filter(btn => btn.classList.contains('accordion-header'));
+    const titles = accordionButtons.map(btn => btn.textContent?.trim() || '');
+    
+    expect(titles[0]).toContain('Layout');
+    expect(titles[1]).toContain('Caption');
+    expect(titles[2]).toContain('Logo');
+    expect(titles[3]).toContain('EXIF');
+    expect(titles[4]).toContain('Presets');
+    expect(titles[5]).toContain('Export');
+  });
 });
 
