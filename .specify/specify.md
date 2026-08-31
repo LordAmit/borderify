@@ -28,6 +28,16 @@ A commit that changes anything under `src/` must reference at least one declared
 *   Enforced locally by the `commit-msg` hook ([.specify/hooks/commit-msg](hooks/commit-msg)) and in CI by the "Check Commit Messages" step, both through `npm run check-commit-ids` ([check-commit-ids.js](scripts/check-commit-ids.js)). CI checks every non-merge commit in the push or pull-request range; run it locally with `npm run check-commit-ids -- main..HEAD`.
 *   Bug reports ask for the affected IDs ([.github/ISSUE_TEMPLATE/bug_report.yml](../.github/ISSUE_TEMPLATE/bug_report.yml)), so an issue → fix commit → requirement → test chain can be followed in either direction.
 
+## Bug fixes
+
+A bug is a behaviour the specification did not rule out, so the fix arrives as structure, not only as a patch. Before a fix merges, the same pull request (or push) must contain, for every ID the fix commit cites:
+
+1.  **A spec change** — normally a new EARS Unwanted Behavior line in the relevant `src/*.spec.md`: `If <condition that produced the bug>, then the system shall <correct response>`. If the fix restores an existing requirement that was violated, edit that requirement so the failure condition is explicit.
+2.  **A test whose title carries the ID** and reproduces the failure (fails before the fix, passes after).
+3.  **The fix commit**, with a `fix:` / `fix(scope):` subject citing the ID.
+
+Enforced by `check-commit-ids.js`: a `fix` commit that changes `src/` may not use `[NO-REQ]`, and for each cited ID the change set (push/PR range in CI; current branch plus staged changes in the `commit-msg` hook) must add a spec line and a test title carrying it. A spec change that is not an Unwanted Behavior line passes with a warning. Bug reports collect the affected IDs up front ([bug_report.yml](../.github/ISSUE_TEMPLATE/bug_report.yml)); the PR template repeats the checklist ([PULL_REQUEST_TEMPLATE.md](../.github/PULL_REQUEST_TEMPLATE.md)).
+
 ## Traceability convention
 
 Every requirement ID links three places. `npm run verify-specs` runs the Vitest suite and fails when any link is missing; `npm run verify-specs -- --matrix` prints the full table, and `--results <file>` reuses an existing Vitest JSON report (`vitest run --reporter=json --outputFile=<file>`) instead of running the suite again.
