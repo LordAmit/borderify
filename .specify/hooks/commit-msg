@@ -1,0 +1,4 @@
+#!/bin/sh
+# Commits that change src/ must reference the affected [REQ-…]/[ARC-…] IDs (or [NO-REQ]).
+# Convention: .specify/specify.md, "Commit message convention".
+node .specify/scripts/check-commit-ids.js --message "$1"

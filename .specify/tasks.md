@@ -10,6 +10,7 @@ When a new feature or bug fix is requested:
 3.  **Task list:** Create an entry in this `tasks.md` file using the template format below.
 4.  **Implement:** Edit the codebase files to match the updated specifications, and put a `// [REQ-…]` tag directly above each function or block that satisfies a requirement (convention in `.specify/specify.md`).
 5.  **Verify:** Run tests and check execution against the specification before closing the task.
+6.  **Commit:** Reference the affected IDs in bracketed form in the commit message (e.g. `fix(render): … [REQ-REND-06]`); the `commit-msg` hook and CI reject a `src/` change without one (convention in `.specify/specify.md`).
 
 ---
 

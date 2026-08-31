@@ -19,6 +19,8 @@ jobs:
 
     steps:
     - uses: actions/checkout@v4
+      with:
+        fetch-depth: 0   # full history: the commit-message check inspects every commit in the push/PR range
 
     - name: Use Node.js ${{ matrix.node-version }}
       uses: actions/setup-node@v4
@@ -37,6 +39,17 @@ jobs:
 
     - name: Verify Specification Traceability
       run: npm run verify-specs
+
+    - name: Check Commit Messages Reference Requirement IDs
+      run: |
+        if [ "${{ github.event_name }}" = "pull_request" ]; then
+          RANGE="${{ github.event.pull_request.base.sha }}..${{ github.event.pull_request.head.sha }}"
+        elif [ "${{ github.event.before }}" = "0000000000000000000000000000000000000000" ]; then
+          RANGE="HEAD~1..HEAD"   # first push of a branch: only the tip is checkable
+        else
+          RANGE="${{ github.event.before }}..${{ github.sha }}"
+        fi
+        npm run check-commit-ids -- "$RANGE"
 
     - name: Run Tests and Coverage
       run: npm run coverage

@@ -21,3 +21,4 @@ System-level obligations. Each carries an `[ARC-NN]` ID and follows the same EAR
 
 ## 4. Traceability
 *   **Spec Traceability:** Every requirement ID (`[REQ-AREA-NN]` in `src/*.spec.md`) and every architectural principle ID (`[ARC-NN]` above) appears in three places: its declaration, a `// [ID]` tag directly above the implementing code, and the title of a test that runs and passes. `npm run verify-specs` enforces all three links from executed Vitest results (convention: [.specify/specify.md](../specify.md)).
+*   **Commit Traceability:** Every commit that changes `src/` references the affected IDs in its message (or `[NO-REQ]` with a reason); enforced by the `commit-msg` hook and CI through `npm run check-commit-ids`.

@@ -19,6 +19,15 @@ The EARS requirements for Borderify are not kept in this file. They live in `*.s
 *   When a new module gets its own spec, add a row to the table above.
 *   Design rationale lives in [DESIGN_DECISIONS.md](../DESIGN_DECISIONS.md) as numbered `DR-NNN` records; each record lists the requirement IDs it serves, and the checker rejects a record that cites an undeclared ID.
 
+## Commit message convention
+
+A commit that changes anything under `src/` must reference at least one declared ID in bracketed form, in its subject or body: `[REQ-AREA-NN]` or `[ARC-NN]`. Suggested subject shape: `type(scope): summary [REQ-REND-06]`; put further IDs and the reasoning in the body.
+
+*   Referenced IDs must be declared in a spec or the constitution at that commit or its parent (a commit that removes a requirement may still cite it).
+*   A `src/` change with no requirement impact (formatting, comment wording, tooling) uses `[NO-REQ]` instead of an ID, with the reason in the body. The check lists these as warnings so they stay visible.
+*   Enforced locally by the `commit-msg` hook ([.specify/hooks/commit-msg](hooks/commit-msg)) and in CI by the "Check Commit Messages" step, both through `npm run check-commit-ids` ([check-commit-ids.js](scripts/check-commit-ids.js)). CI checks every non-merge commit in the push or pull-request range; run it locally with `npm run check-commit-ids -- main..HEAD`.
+*   Bug reports ask for the affected IDs ([.github/ISSUE_TEMPLATE/bug_report.yml](../.github/ISSUE_TEMPLATE/bug_report.yml)), so an issue → fix commit → requirement → test chain can be followed in either direction.
+
 ## Traceability convention
 
 Every requirement ID links three places. `npm run verify-specs` runs the Vitest suite and fails when any link is missing; `npm run verify-specs -- --matrix` prints the full table, and `--results <file>` reuses an existing Vitest JSON report (`vitest run --reporter=json --outputFile=<file>`) instead of running the suite again.

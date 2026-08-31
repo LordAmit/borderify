@@ -12,6 +12,7 @@
     "verify-specs": "node .specify/scripts/verify-traceability.js",
     "lint-specs": "node .specify/scripts/lint-specs.js",
     "check-spec-drift": "node .specify/scripts/check-spec-drift.js",
+    "check-commit-ids": "node .specify/scripts/check-commit-ids.js",
     "prepare": "git config core.hooksPath .specify/hooks",
     "coverage": "vitest run --coverage"
   },

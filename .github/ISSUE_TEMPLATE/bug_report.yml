@@ -1,0 +1,54 @@
+name: Bug report
+description: Behaviour that differs from its specification
+title: "[Bug]: "
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Borderify is spec-driven: every behaviour has a requirement ID such as `[REQ-REND-06]` or `[ARC-02]`.
+        Find the ID in the spec index: [`.specify/specify.md`](../blob/main/.specify/specify.md) → the linked `src/*.spec.md` file.
+        Citing the ID lets the fix commit, its test, and this issue be traced to the same requirement.
+  - type: input
+    id: requirement-ids
+    attributes:
+      label: Affected requirement IDs
+      description: One or more IDs in bracketed form, e.g. `[REQ-EXIF-05] [REQ-REND-13]`. Write `unknown` if you could not find one.
+      placeholder: "[REQ-REND-06]"
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected behaviour (as the requirement states it)
+      description: Quote or paraphrase the requirement text if you found it.
+    validations:
+      required: true
+  - type: textarea
+    id: actual
+    attributes:
+      label: Actual behaviour
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to reproduce
+      placeholder: |
+        1. Load a JPEG with EXIF data
+        2. Set background to "Blurred Photo"
+        3. Export
+    validations:
+      required: true
+  - type: input
+    id: environment
+    attributes:
+      label: Browser and OS
+      placeholder: "Safari 18 on iOS 19 / Chrome 140 on macOS 26"
+  - type: checkboxes
+    id: spec-status
+    attributes:
+      label: Specification status
+      options:
+        - label: The requirement text itself is wrong or incomplete (this is a spec bug, not only a code bug)
+        - label: No existing requirement covers this behaviour (a new ID is needed)
