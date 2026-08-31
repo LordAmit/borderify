@@ -1,57 +1,119 @@
-# Architecture & Design Decisions: Photo Border & EXIF App
+# Design Decision Records: Borderify
 
-This document outlines the core technical decisions, trade-offs, and design philosophies applied during the development of this application. It aims to mitigate comprehension debt for future maintainers.
+Numbered records of the core technical decisions, their trade-offs, and the requirements each one serves. The aim is to keep the *why* traceable next to the *what*: every record links the EARS requirement IDs it justifies, and `npm run verify-specs` rejects a record that cites an ID no spec declares.
 
-## AI ASSISTANT RULES
-**CRITICAL RULE:** AI ASSISTANTS MUST NEVER TRIGGER DEPLOYMENTS. 
-Do not run `npm run deploy`, `rsync`, or any command that pushes code to a staging or production environment. The deployment script has been moved to a separate `deploy.sh` file, which is strictly reserved for manual execution by the human user.
+**Record format.** `DR-NNN` heading; a field table (Status, Date, Requirements, Code); then Decision and Trade-offs. IDs link to the colocated spec that declares them (index: [.specify/specify.md](.specify/specify.md)).
 
+**Status values.** `Accepted` (in force, matches the code) · `Proposed` (agreed, not yet implemented) · `Superseded` (replaced; the record stays for history and names what replaced it) · `Deprecated` (no longer applies, nothing replaced it).
 
-## 1. Canvas-First Rendering Pipeline (`render.ts`)
+## Standing rules
 
-**Decision:** The application relies entirely on HTML5 `<canvas>` rendering (`CanvasRenderingContext2D`) instead of DOM-based overlay styling (like CSS absolute positioning) to generate the final borders and EXIF data.
-**Trade-offs:** 
-- *Pros:* Guarantees pixel-perfect exports. What you see is exactly what get exported. It inherently supports high-resolution outputs (since canvas dimensions mirror the physical image resolution before padding). Eliminates browser-specific CSS rendering quirks.
-- *Cons:* Requires complex manual math for all positional logic (`ctx.fillText`, `ctx.roundRect`). Makes text/logo wrapping and alignment rigid, meaning we had to build custom bounding box algorithms (`measureText` passes) to position EXIF pills and brand templates dynamically.
+**AI assistants must never trigger deployments.** Do not run `npm run deploy`, `rsync`, or any command that pushes code to a staging or production environment. Deployment lives in `deploy.sh`, reserved for manual execution by the human user. The canonical statement of this and the other non-negotiables is [.specify/memory/constitution.md](.specify/memory/constitution.md).
 
-## 2. Inward Canvas Padding Algorithm
+---
 
-**Decision:** Instead of calculating the final canvas size by *adding* a dynamic padding scale to the original image dimensions, the engine allocates the frame based purely on the target aspect ratio, scale bounds, and then works strictly *inward*. The frame edge is absolute, and the target image shrinks internally.
-**Trade-offs:** 
-- *Why:* Earlier versions attempted to add global border padding outward from the original canvas. This distorted the integrity of fixed output aspect ratios (e.g., trying to force a 4:5 frame but adding uneven 10% padding resulted in an unpredictable canvas shape). 
-- *Benefit:* By dictating the canvas size strictly off the chosen ratio (e.g., `4:3`) bound to the longest image side, the padding scales independently subtract from that boundary to shape the core image area. This inherently solves Aspect Ratio skewing entirely.
+## DR-001 — Canvas-First Rendering Pipeline
 
-## 3. UI Component Standardization (`SliderRow`)
+| Field | Value |
+| --- | --- |
+| **Status** | Accepted |
+| **Date** | 2026-05-08 |
+| **Requirements** | [ARC-01](.specify/memory/constitution.md), [REQ-REND-01](src/render.spec.md), [REQ-REND-02](src/render.spec.md), [REQ-REND-03](src/render.spec.md), [REQ-REND-10](src/render.spec.md), [REQ-REND-13](src/render.spec.md), [REQ-EXPT-01](src/export.spec.md) |
+| **Code** | [render.ts](src/render.ts), [CanvasPreview.tsx](src/CanvasPreview.tsx) |
 
-**Decision:** Form inputs and slider settings were refactored from massive repetitive JSX blocks into standard abstracted React Components (`SliderRow` in `SidebarControls.tsx`).
-**Trade-offs:** 
-- *Pros:* Allowed easy mass-injection of features. For instance, the cross-browser "Reset" icon was appended to 20+ sliders by modifying a single file. Reduces footprint dramatically.
-- *Cons:* Slightly localizes control typing in `store.tsx` updates. Requires passing `onChange` and `onReset` closures inline for every parameter instead of grouping them locally.
+**Decision:** The application relies entirely on HTML5 `<canvas>` rendering (`CanvasRenderingContext2D`) instead of DOM-based overlay styling (such as CSS absolute positioning) to generate the final borders and EXIF data. This is constitution principle [ARC-01](.specify/memory/constitution.md) (Canvas-First Rendering).
 
-## 4. Sub-Clipping Layers (Inner Borders & Curves)
-
-**Decision:** Inner Image padding, rounded frame corners, and inner picture corners are built using multi-pass `ctx.clip()` and `ctx.shadowColor` paths rather than generic image manipulations. 
 **Trade-offs:**
-- *Pros:* By defining a mathematical Path, filling it with white to cast a raw HTML5 shadow, and *then* applying a clip mask before drawing the image, we were able to implement custom settings like "Inner Image Shadow" and "Image Radius" independent of the outer background rendering.
-- *Cons:* HTML5 Canvas clipping can be slightly anti-aliased unexpectedly in sub-pixel edge cases, but for high-resolution photo exports (10+ megapixels), the clipping edge is seamlessly sharp.
+- *Pros:* Guarantees pixel-perfect exports; what is previewed is exactly what is exported. Inherently supports high-resolution output, since canvas dimensions mirror the physical image resolution before padding. Eliminates browser-specific CSS rendering quirks.
+- *Cons:* Requires manual math for all positional logic (`ctx.fillText`, `ctx.roundRect`). Text and logo wrapping and alignment are rigid, so custom bounding-box measurement (`measureText` passes) was built to position EXIF pills and labels dynamically.
 
-## 5. UI Batch Processing Workflow vs Preview
+## DR-002 — Inward Canvas Padding Algorithm
 
-**Decision:** The primary view is a *Live Render Pipeline*, executing on `state.activeImageId`. We render the current target on every single keystroke/slider change for real-time `CanvasPreview`. Batch export repeats this exact rendering pipeline iteratively via hidden offscreen canvases.
+| Field | Value |
+| --- | --- |
+| **Status** | Accepted |
+| **Date** | 2026-05-08 |
+| **Requirements** | [REQ-REND-01](src/render.spec.md), [REQ-REND-02](src/render.spec.md) |
+| **Code** | [render.ts](src/render.ts) (canvas bounds and padding calculation) |
+
+**Decision:** Instead of calculating the final canvas size by *adding* a padding scale to the original image dimensions, the engine allocates the frame purely from the target aspect ratio and scale bounds, then works strictly *inward*. The frame edge is absolute; the image shrinks inside it.
+
 **Trade-offs:**
-- *Pros:* Massive speed boost and stability. Users can process 50 photos, set the aesthetics on one photo preview, and initiate an asynchronous `Batch Export Zip`. 
-- *Cons:* A fast live-render pipeline on an 80MB RAW-to-JPEG payload might drop some internal DOM framing rates if slider interaction is rapid, but offscreen memory is aggressively cleaned. 
+- *Why:* Earlier versions added global border padding outward from the original canvas. That broke fixed output aspect ratios (forcing a 4:5 frame and then adding uneven 10% padding produced an unpredictable canvas shape).
+- *Benefit:* With the canvas size dictated by the chosen ratio (e.g. `4:3`) bound to the longest image side, each padding scale subtracts from that boundary to shape the image area. Aspect-ratio skew is eliminated by construction.
 
-## 6. Overridable EXIF Parsing (`exifr`)
+## DR-003 — UI Component Standardization (`SliderRow`)
 
-**Decision:** EXIF headers are inherently unchangeable to a visual parser. To offer users flexibility, the store supports `customCameraText` and `customLensText` intercept variables. 
-**Trade-offs:** 
-- If a user uses the batch processor and overrides the "Lens", ALL 50 photos in that batch zip will inherit that literal override string. This is accepted behavior to allow unified brand aesthetics across mismatched lens shoots.
+| Field | Value |
+| --- | --- |
+| **Status** | Accepted |
+| **Date** | 2026-05-08 |
+| **Requirements** | [REQ-UI-03](src/ui.spec.md), [REQ-STAT-03](src/store.spec.md) |
+| **Code** | [SidebarControls.tsx](src/SidebarControls.tsx) (`SliderRow`) |
 
-## 7. Performance Blur (Optimization for Mobile/Safari)
+**Decision:** Slider settings were refactored from repeated JSX blocks into one abstracted React component (`SliderRow`).
 
-**Decision:** Background blurring does not occur on the main high-resolution canvas. Instead, we use a "Downsampled Buffer" technique. The image is drawn to a small (max 800px) offscreen canvas, blurred there, and then upscaled back to the main canvas.
 **Trade-offs:**
-- *Pros:* Massive performance improvement. Blurring a 6000px canvas with a high radius is computationally expensive and often causes mobile GPUs (especially Safari/iOS) to fail. Downsampling guarantees compatibility across all devices and provides a naturally smoother blur due to bilinear upscaling.
-- *Cons:* At extremely low blur radii, meticulous observers might notice a minor decrease in "sharpness" compared to a theoretical perfect high-res blur, but for background aesthetics, the difference is negligible.
+- *Pros:* Features can be added to every slider at once. The "Reset" icon and the −/+ nudge buttons reached 20+ sliders by editing a single component. Much smaller footprint.
+- *Cons:* Control typing is loosely coupled to `store.tsx` updates; each parameter passes `onChange` and `onReset` closures inline instead of grouping them locally.
 
+## DR-004 — Sub-Clipping Layers (Inner Borders and Curves)
+
+| Field | Value |
+| --- | --- |
+| **Status** | Accepted |
+| **Date** | 2026-05-08 |
+| **Requirements** | [REQ-REND-05](src/render.spec.md), [REQ-REND-07](src/render.spec.md), [REQ-REND-09](src/render.spec.md), [REQ-REND-11](src/render.spec.md), [REQ-REND-12](src/render.spec.md), [REQ-REND-14](src/render.spec.md) |
+| **Code** | [render.ts](src/render.ts) (inner card, photo clip, photo border passes) |
+
+**Decision:** Inner image padding, rounded frame corners, and rounded picture corners are built from multi-pass `ctx.clip()` and `ctx.shadowColor` paths rather than generic image manipulation.
+
+**Trade-offs:**
+- *Pros:* Defining a mathematical path, filling it white to cast a native shadow, and *then* applying a clip mask before drawing the image lets "Inner Image Shadow" and "Image Radius" work independently of the background rendering. Falls back to plain `rect` where `roundRect` is unsupported.
+- *Cons:* Canvas clipping can anti-alias unexpectedly at sub-pixel edges, but at photo export resolutions (10+ megapixels) the clipping edge is sharp.
+
+## DR-005 — Live Preview Pipeline Reused for Batch Export
+
+| Field | Value |
+| --- | --- |
+| **Status** | Accepted |
+| **Date** | 2026-05-08 |
+| **Requirements** | [ARC-03](.specify/memory/constitution.md), [REQ-REND-04](src/render.spec.md), [REQ-EXPT-02](src/export.spec.md), [REQ-EXPT-03](src/export.spec.md), [REQ-UI-06](src/ui.spec.md) |
+| **Code** | [CanvasPreview.tsx](src/CanvasPreview.tsx), [App.tsx](src/App.tsx) (`handleExportBatch`) |
+
+**Decision:** The primary view is a live render pipeline keyed on `state.activeImageId`: the active image is re-rendered on every slider change for the `CanvasPreview`. Batch export repeats the same `renderPhotoBorder` pipeline for each queued image on a hidden offscreen canvas.
+
+**Trade-offs:**
+- *Pros:* One rendering path, so preview and export cannot diverge. Users tune aesthetics on one photo and then export the whole queue asynchronously to a ZIP.
+- *Cons:* Rapid slider interaction on very large images (80 MB RAW-derived JPEGs) can drop frames in the live preview; offscreen canvases are released after each export.
+
+## DR-006 — Overridable EXIF Text (`customCameraText`, `customLensText`)
+
+| Field | Value |
+| --- | --- |
+| **Status** | Accepted |
+| **Date** | 2026-05-08 |
+| **Requirements** | [REQ-REND-13](src/render.spec.md), [REQ-EXIF-06](src/exif.spec.md). *Gap:* no requirement yet declares the override fields themselves; `store.test.tsx` and `SidebarControls.test.tsx` cover them without a REQ ID. |
+| **Code** | [render.ts](src/render.ts) (pill text resolution), [utils.ts](src/utils.ts) (`resolveTemplate`), [types.ts](src/types.ts) (`ExifPillSettings`) |
+
+**Decision:** EXIF headers cannot be edited by the visual parser, so the store exposes `customCameraText` and `customLensText` template overrides that replace the parsed camera and lens strings in the pills.
+
+**Trade-offs:**
+- If a user sets a lens override and runs a batch export, every photo in that ZIP inherits the literal override. This is accepted so that a unified brand look can be applied across shoots with mismatched lenses.
+
+## DR-007 — Direct Canvas-Filter Background Blur
+
+| Field | Value |
+| --- | --- |
+| **Status** | Accepted |
+| **Date** | 2026-08-31 (replaces a downsampled-buffer proposal from 2026-05-08 that was never implemented) |
+| **Requirements** | [REQ-REND-06](src/render.spec.md) |
+| **Code** | [render.ts](src/render.ts) (blurred-image background pass) |
+
+**Decision:** When `backgroundType` is `blurred-image`, the source image is drawn cover-fit and centered onto the main canvas with `ctx.filter = blur(Xpx)` applied directly, where X = baseLength × `backgroundBlurScale`; a black overlay at `backgroundDimScale` opacity follows. No intermediate buffer canvas is used.
+
+**Trade-offs:**
+- *Pros:* One draw call and no extra canvas allocation; the blur radius scales with the output size, so preview and export match exactly (see DR-005). Simplest code path to reason about and test.
+- *Cons:* Blurring a full-resolution canvas (6000 px+) with a large radius is expensive, and some mobile GPUs (Safari/iOS) have failed on large filtered draws. The UI labels the option "Desktop only" as a precaution.
+
+**Considered alternative — downsampled buffer (not adopted):** draw the image to a small offscreen canvas (max 800 px), blur it there, and upscale it back to the main canvas. Cheaper on large images, guaranteed compatibility on mobile GPUs, and a naturally smoother blur from bilinear upscaling; at very low radii, a minor loss of sharpness compared with a full-resolution blur. Revisit this alternative if blur failures or unacceptable preview lag are reported on mobile devices; `[REQ-REND-06]` would need rewriting alongside the code.
