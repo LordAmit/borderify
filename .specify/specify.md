@@ -15,7 +15,7 @@ The EARS requirements for Borderify are not kept in this file. They live in `*.s
 
 *   Requirements are written in EARS patterns (ubiquitous, event-driven, state-driven, optional, unwanted-behavior) and grouped by pattern inside each spec.
 *   Every requirement carries a unique ID in the form `[REQ-<AREA>-<NN>]`; architectural principles use `[ARC-<NN>]` and follow the same rules. Tests reference these IDs in their descriptions for traceability (see [test.prompt.md](prompts/test.prompt.md)).
-*   To change behavior, edit the relevant `src/*.spec.md` first, then update [plan.md](plan.md) and [tasks.md](tasks.md), then implement.
+*   To change behavior, edit the relevant `src/*.spec.md` first, then update [plan.md](plan.md) if the architecture changes, then implement (workflow and done-checklist: [prompts/implement.prompt.md](prompts/implement.prompt.md)).
 *   When a new module gets its own spec, add a row to the table above.
 *   Design rationale lives in [DESIGN_DECISIONS.md](../DESIGN_DECISIONS.md) as numbered `DR-NNN` records; each record lists the requirement IDs it serves, and the checker rejects a record that cites an undeclared ID.
 

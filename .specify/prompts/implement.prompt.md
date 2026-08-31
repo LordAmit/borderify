@@ -9,7 +9,7 @@ Before modifying any source code, you MUST read and conform to the project speci
 1.  **Read the Constitution:** Review `.specify/memory/constitution.md`. You must adhere to the tech stack (React + TypeScript + Vite + Vanilla CSS) and safety rules (e.g., NEVER trigger deployments). Its architectural principles carry `[ARC-NN]` IDs and are tagged and tested like feature requirements; a change that touches one must keep its `src/architecture.test.ts` guard passing.
 2.  **Read the Specifications:** Review the corresponding `*.spec.md` file colocated next to the source code you are modifying (e.g. `src/render.spec.md` for rendering changes) to understand the EARS requirements.
 3.  **Read the Plan:** Review `.specify/plan.md` to see the component architecture and file layout.
-4.  **Confirm the Task:** Look at the active task definition in `.specify/tasks.md` (or `.specify/tasks/task-xxx.md`).
+4.  **Confirm the Task:** Work from the GitHub issue (or the user's request). Bug reports name the affected requirement IDs; if none is given, find them in `.specify/specify.md` before changing code.
 
 ## Code Modification Rules
 
@@ -20,6 +20,16 @@ Before modifying any source code, you MUST read and conform to the project speci
 *   **Write Clean Types:** Match type boundaries defined in `src/types.ts`.
 *   **No Framework Alterations:** Use Vanilla CSS only. Do not add Tailwind CSS or other utility libraries.
 *   **Unit Tests:** For every feature or behavior change, you must write/update tests matching the EARS requirement IDs (e.g. `[REQ-EXIF-01]`).
+
+## Done Checklist
+
+Before reporting a task complete:
+
+*   `[ ]` Spec updated first (`src/*.spec.md`, or the constitution for `[ARC-…]`), then `.specify/plan.md` if the architecture changed
+*   `[ ]` Implementation tagged and tests titled with the IDs; `npm run verify-specs` passes
+*   `[ ]` `npm run lint` and `npm run coverage` pass
+*   `[ ]` Render pipeline changes verified visually in the browser preview
+*   `[ ]` Commit message cites the IDs (`npm run check-commit-ids -- main..HEAD` passes)
 
 ## Token & Context Optimization Rules
 
