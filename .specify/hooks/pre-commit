@@ -1,4 +1,4 @@
 #!/bin/sh
-# Run Spec Linting and Spec Traceability validation before commit
-npm run check-spec-drift
+# Spec lint, spec→implementation→test traceability, and the full test suite with coverage.
+# Commit-message rules (IDs, bug-fix discipline) run in the commit-msg hook.
 npm run lint-specs && npm run verify-specs && npm run coverage
