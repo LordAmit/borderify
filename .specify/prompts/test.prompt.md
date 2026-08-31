@@ -3,7 +3,7 @@
 You are an AI assistant tasked with writing or updating tests for **Borderify**. 
 
 ## Traceability Rule
-Every test description block you write MUST begin with the unique EARS Requirement ID from `.specify/specify.md` to guarantee traceability (e.g. `[REQ-EXIF-01]`).
+Every test description block you write MUST begin with the unique EARS Requirement ID from the relevant colocated `src/*.spec.md` file (indexed in `.specify/specify.md`) to guarantee traceability (e.g. `[REQ-EXIF-01]`). The same ID is also tagged as a `// [REQ-…]` comment on the implementing code, so the chain reads spec → implementation → test; search `src/` for the ID to find the code under test. Coverage is judged from executed Vitest results: the ID must be in the title of a test that runs and passes (not `it.skip`, not `it.todo`, not a comment).
 
 ### Example format:
 ```typescript

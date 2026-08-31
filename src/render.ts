@@ -4,6 +4,7 @@ import { resolveTemplate } from './utils';
 // Helper to calculate X/Y based on a 9-point grid relative to a container
 type Alignment = 'left' | 'center' | 'right';
 
+// [REQ-REND-03] 9-point anchor grid (Top/Middle/Bottom x Left/Center/Right)
 function getPreciseAnchor(
   containerW: number,
   containerH: number,
@@ -29,6 +30,7 @@ function getPreciseAnchor(
   return map[position] || map['Bottom Center'];
 }
 
+// [ARC-01] The canvas is the single output surface; nothing here touches the DOM
 export const renderPhotoBorder = (
   canvas: HTMLCanvasElement,
   image: ImageItem,
@@ -40,6 +42,7 @@ export const renderPhotoBorder = (
   const ctx = canvas.getContext('2d');
   if (!ctx) return;
 
+  // [REQ-REND-01] [REQ-EXPT-03] Output canvas bounds from the aspect ratio and the longest-edge scale limit
   const imgWidth = imgObject.naturalWidth || imgObject.width;
   const imgHeight = imgObject.naturalHeight || imgObject.height;
 
@@ -69,6 +72,7 @@ export const renderPhotoBorder = (
   canvas.width = cWidth;
   canvas.height = cHeight;
 
+  // [REQ-REND-02] Border padding is computed inward from the final canvas bounds
   const minEdge = Math.min(cWidth, cHeight);
   const outerPadding = minEdge * config.layout.borderWidthScale;
 
@@ -77,6 +81,7 @@ export const renderPhotoBorder = (
     ctx.fillStyle = config.layout.backgroundColor;
     ctx.fillRect(0, 0, canvas.width, canvas.height);
   } else {
+      // [REQ-REND-06] Blurred-image background
       ctx.save();
       const coverRatio = Math.max(canvas.width / imgWidth, canvas.height / imgHeight);
       const coverW = imgWidth * coverRatio;
@@ -124,7 +129,7 @@ export const renderPhotoBorder = (
   const cardX = (canvas.width - cardW) / 2;
   const cardY = (canvas.height - cardH) / 2;
 
-  // Draw Inner Card Border (White block)
+  // [REQ-REND-11] [REQ-REND-12] [REQ-REND-05] Inner card: rounded corners via roundRect (rect fallback) with outer shadow
   ctx.save();
   const radius = baseLength * config.layout.imageRadiusScale;
   const shadowBlur = baseLength * config.layout.imageShadowBlurScale;
@@ -145,7 +150,7 @@ export const renderPhotoBorder = (
   ctx.fill();
   ctx.restore();
 
-  // Draw Actual Photo
+  // [REQ-REND-09] [REQ-REND-07] [REQ-REND-05] Photo: rounded clip path (rect fallback) with inner shadow layer below the clip
   const photoX = cardX + innerPadSide + photoPadding;
   const photoY = cardY + innerPadTop + photoPadding;
   const photoRadius = baseLength * (config.layout.innerImageRadiusScale || 0);
@@ -175,7 +180,7 @@ export const renderPhotoBorder = (
   ctx.drawImage(imgObject, photoX, photoY, drawImgW, drawImgH);
   ctx.restore();
 
-  // Draw photo border stroke [REQ-REND-14]
+  // [REQ-REND-14] Photo border stroke
   if (config.layout.photoBorderWidthScale && config.layout.photoBorderWidthScale > 0) {
     ctx.save();
     ctx.beginPath();
@@ -192,7 +197,7 @@ export const renderPhotoBorder = (
 
 
 
-  // EXIF Pills
+  // [REQ-REND-13] EXIF pills
   if (config.exifPills.show && image.exif) {
     const { exifPills } = config;
     const dataPairs = [];
@@ -262,6 +267,7 @@ export const renderPhotoBorder = (
         ctx.textAlign = 'center';
         ctx.textBaseline = 'middle';
         ctx.font = `600 ${fontSize}px "${exifPills.fontFamily.replace(/"/g, '')}", sans-serif`;
+        // [REQ-REND-08] Pill text outline
         if (exifPills.textStrokeWidthScale > 0) {
           ctx.lineWidth = baseLength * exifPills.textStrokeWidthScale;
           ctx.strokeStyle = exifPills.textStrokeColor;
@@ -284,6 +290,7 @@ export const renderPhotoBorder = (
     }
   }
 
+  // [REQ-REND-10] Logo scaled proportionally from baseLength
   let logoW = 0, logoH = 0;
   if (config.logo.dataUrl && _logoImgObject) {
      logoH = baseLength * config.logo.sizeScale;
@@ -356,6 +363,7 @@ export const renderPhotoBorder = (
         const style = seg.italic ? 'italic' : globalStyle;
         ctx.font = `${style} ${weight} ${fontSize}px "${labelWithOverrides.fontFamily.replace(/"/g, '')}", sans-serif`;
         
+        // [REQ-REND-08] Label text outline
         if (labelWithOverrides.strokeWidthScale > 0) {
           ctx.lineWidth = baseLength * labelWithOverrides.strokeWidthScale;
           ctx.strokeStyle = labelWithOverrides.strokeColor;
@@ -369,7 +377,7 @@ export const renderPhotoBorder = (
     });
   });
 
-  // Render independent Logo
+  // [REQ-REND-10] Logo drawn at its anchored position
   if (logoW > 0 && _logoImgObject) {
     const logoAnchor = getPreciseAnchor(
       cardW, cardH, drawImgH, 

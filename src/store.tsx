@@ -2,6 +2,7 @@ import React, { createContext, useContext, useState, useCallback } from 'react';
 import type { ReactNode } from 'react';
 import type { AppState, AppConfig, ImageItem, TextLabel } from './types';
 
+// [REQ-STAT-01] Single configuration object holding layout, labels, logo, pills, and export settings
 export const defaultConfig: AppConfig = {
   layout: {
     aspectRatio: "1:1",
@@ -49,6 +50,7 @@ export const defaultConfig: AppConfig = {
     offsetXScale: 0,
     offsetYScale: 0,
   },
+  // [REQ-STAT-07] Only focal, aperture, ISO, and shutter pills are enabled by default
   exifPills: {
     show: true,
     showFocal: true,
@@ -93,6 +95,7 @@ interface StoreContextType {
 
 const StoreContext = createContext<StoreContextType | undefined>(undefined);
 
+// [ARC-03] The single React Context that holds all app state
 export const StoreProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
   const [state, setState] = useState<AppState>({
     images: [],
@@ -100,6 +103,7 @@ export const StoreProvider: React.FC<{ children: ReactNode }> = ({ children }) =
     config: defaultConfig,
   });
 
+  // [REQ-STAT-02] Whole-config replacement; preset loading passes a replacer here
   const updateConfig = useCallback((updater: (prev: AppConfig) => AppConfig) => {
     setState(prev => ({
       ...prev,
@@ -107,6 +111,7 @@ export const StoreProvider: React.FC<{ children: ReactNode }> = ({ children }) =
     }));
   }, []);
 
+  // [REQ-EXIF-03] Append to the session queue; the first image becomes active
   const addImage = (image: ImageItem) => {
     setState(prev => ({
       ...prev,
@@ -115,6 +120,7 @@ export const StoreProvider: React.FC<{ children: ReactNode }> = ({ children }) =
     }));
   };
 
+  // [REQ-STAT-04] Remove from the queue and move the active selection if the removed image was active
   const removeImage = (id: string) => {
     setState(prev => {
       const newImages = prev.images.filter(img => img.id !== id);
@@ -126,10 +132,12 @@ export const StoreProvider: React.FC<{ children: ReactNode }> = ({ children }) =
     });
   };
 
+  // [REQ-STAT-05] Select the active image
   const setActiveImage = (id: string | null) => {
     setState(prev => ({ ...prev, activeImageId: id }));
   };
 
+  // [REQ-STAT-06] Clear the whole queue
   const clearAllImages = () => {
     setState(prev => ({ ...prev, images: [], activeImageId: null }));
   };

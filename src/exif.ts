@@ -2,12 +2,15 @@ import exifr from 'exifr';
 import * as piexif from 'piexifjs';
 import type { ExifData, ImageItem } from './types';
 
+// [ARC-02] Parsing runs entirely in the browser; the file never leaves the machine
+// [REQ-EXIF-02] Parse camera, lens, exposure, focal length, ISO, and date tags
 export const extractExif = async (file: File): Promise<ExifData> => {
   try {
     const data = await exifr.parse(file, [
       'Make', 'Model', 'FocalLength', 'FNumber', 'ISO', 'ExposureTime', 'LensModel', 'DateTimeOriginal'
     ]);
 
+    // [REQ-EXIF-06] No EXIF segment: return an empty object so template fields resolve to empty strings
     if (!data) return {};
 
     // Clean strings (remove null bytes and trim)
@@ -40,11 +43,15 @@ export const extractExif = async (file: File): Promise<ExifData> => {
       date: dateValue as any,
     };
   } catch (error) {
+    // [REQ-EXIF-05] Unparseable file: warn and return empty EXIF so the queue keeps processing
     console.warn("Failed to extract EXIF data", error);
     return {};
   }
 };
 
+// [ARC-02] Export is assembled locally; fetch() here only dereferences data: URLs
+// [REQ-EXPT-01] JPEG compression at the configured quality
+// [REQ-EXPT-04] Re-inject the raw EXIF header when rawExifStr is present
 export const exportImageWithExif = async (canvas: HTMLCanvasElement, image: ImageItem, quality: number = 0.92): Promise<Blob | null> => {
   const dataUrl = canvas.toDataURL('image/jpeg', quality);
 

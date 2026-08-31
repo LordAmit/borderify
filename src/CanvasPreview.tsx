@@ -10,6 +10,7 @@ const CanvasPreview: React.FC = () => {
   const activeImage = state.images.find(img => img.id === state.activeImageId);
   const config = state.config;
 
+  // [REQ-REND-04] Re-run the render pipeline whenever the active image or config changes
   useEffect(() => {
     if (!activeImage || !canvasRef.current || !config) return;
 

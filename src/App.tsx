@@ -98,6 +98,7 @@ function App() {
     });
   }, [state.config.labels, state.config.exifPills.fontFamily, state.images, updateConfig]);
 
+  // [ARC-02] [REQ-EXIF-01] [REQ-EXIF-03] [REQ-EXIF-04] Client-side loading via the File API; each file gets EXIF extracted, then joins the queue
   const processFiles = async (files: FileList) => {
     for (let i = 0; i < files.length; i++) {
       const file = files[i];
@@ -135,6 +136,7 @@ function App() {
         tempImg.src = objectUrl;
       });
 
+      // [REQ-EXIF-05] Undecodable image: skip it and keep processing the rest of the queue
       if (!isLoaded) continue;
 
       addImage({
@@ -183,6 +185,7 @@ function App() {
 
 
 
+  // [ARC-02] [REQ-EXPT-02] [REQ-UI-06] Batch export: render every queued image sequentially into one ZIP
   const handleExportBatch = async () => {
     if (state.images.length === 0) return;
 
@@ -207,6 +210,7 @@ function App() {
         img.src = image.objectUrl;
       });
 
+      // [REQ-EXPT-03] Longest-edge limit from export.maxResolution
       let overrideMaxRes = Infinity;
       if (state.config.export?.maxResolution === "4K") overrideMaxRes = 3840;
       if (state.config.export?.maxResolution === "Facebook") overrideMaxRes = 2048;
@@ -251,6 +255,7 @@ function App() {
       img.src = targetImage.objectUrl;
     });
 
+    // [REQ-EXPT-03] Longest-edge limit from export.maxResolution
     let overrideMaxRes = Infinity;
     if (state.config.export?.maxResolution === "4K") overrideMaxRes = 3840;
     if (state.config.export?.maxResolution === "Facebook") overrideMaxRes = 2048;
@@ -291,6 +296,7 @@ function App() {
       img.src = targetImage.objectUrl;
     });
 
+    // [REQ-EXPT-03] Longest-edge limit from export.maxResolution
     let overrideMaxRes = Infinity;
     if (state.config.export?.maxResolution === "4K") overrideMaxRes = 3840;
     if (state.config.export?.maxResolution === "Facebook") overrideMaxRes = 2048;
@@ -306,6 +312,7 @@ function App() {
     setIsPreviewLoading(false);
   };
 
+  // [REQ-UI-04] Export the active configuration as a JSON file
   const savePresetJSON = () => {
     const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(state.config, null, 2));
     const dlAnchorElem = document.createElement('a');
@@ -316,6 +323,7 @@ function App() {
 
   const importPresetRef = useRef<HTMLInputElement>(null);
 
+  // [REQ-STAT-02] [REQ-UI-04] Overwrite the active configuration from an uploaded preset JSON
   const loadPresetJSON = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
@@ -332,6 +340,7 @@ function App() {
     if (importPresetRef.current) importPresetRef.current.value = '';
   };
 
+  // [REQ-UI-01] Split-pane layout: workspace (canvas preview) plus SidebarControls (desktop sidebar / mobile drawer)
   return (
     <div
       className="app-container"
@@ -376,6 +385,7 @@ function App() {
               <button className="btn btn-outline" onClick={() => fileInputRef.current?.click()}>
                 <Upload size={16} /> Browse
               </button>
+              {/* [REQ-STAT-06] [REQ-UI-05] Clear all queued images */}
               <button className="btn btn-danger" onClick={() => clearAllImages()} disabled={state.images.length === 0} title="Clear All Photos">
                 <Trash2 size={16} /> Reset
               </button>
@@ -403,6 +413,7 @@ function App() {
               <div style={{ flex: 1, minHeight: 0 }}>
                 <CanvasPreview />
               </div>
+              {/* [REQ-UI-05] Image queue: thumbnails with select and delete controls */}
               {state.images.length > 1 && (
                 <div style={{
                   height: '80px',

@@ -100,6 +100,7 @@ export interface ExportSettings {
   maxResolution: "Original" | "4K" | "Facebook" | "Instagram";
 }
 
+// [REQ-STAT-01] The single configuration object
 export interface AppConfig {
   layout: LayoutSettings;
   labels: TextLabel[];

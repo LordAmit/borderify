@@ -53,8 +53,11 @@ function getSpecFiles(dir, files = []) {
 
 function lintSpecs() {
   const specFiles = getSpecFiles(path.join(projectRoot, 'src'));
+  // Architectural principles ([ARC-NN]) live in the constitution and follow the same EARS rules.
+  const constitution = path.join(projectRoot, '.specify/memory/constitution.md');
+  if (fs.existsSync(constitution)) specFiles.push(constitution);
   
-  console.log(`\n🔍 Linting EARS requirements in ${specFiles.length} colocated spec files...`);
+  console.log(`\n🔍 Linting EARS requirements in ${specFiles.length} spec files (colocated specs + constitution principles)...`);
 
   let errorCount = 0;
   let successCount = 0;
@@ -66,7 +69,7 @@ function lintSpecs() {
 
     lines.forEach((line, index) => {
       const trimmed = line.trim();
-      const reqMatch = trimmed.match(/^\*\s+(?:\*\*|)?(\[REQ-[A-Z]+-\d+\])(?:\*\*|)?\s+(.+)$/i);
+      const reqMatch = trimmed.match(/^\*\s+(?:\*\*|)?(\[(?:REQ-[A-Z]+|ARC)-\d+\])(?:\*\*|)?\s+(.+)$/i);
       
       if (reqMatch) {
         const id = reqMatch[1];

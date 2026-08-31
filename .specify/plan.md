@@ -1,6 +1,6 @@
 # Borderify Technical Plan & Architecture
 
-This document describes the architectural layout and component responsibilities for the Borderify application, acting as the bridge between requirements in `specify.md` and the actual implementation files.
+This document describes the architectural layout and component responsibilities for the Borderify application, acting as the bridge between the EARS requirements in the colocated `src/*.spec.md` files (indexed in [specify.md](specify.md)) and the actual implementation files.
 
 ## 1. Component Overview
 

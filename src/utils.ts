@@ -1,5 +1,6 @@
 import type { ExifData } from './types';
 
+// [REQ-EXIF-06] Missing EXIF fields resolve to empty strings
 export const resolveTemplate = (raw: string, exif: ExifData | undefined): string => {
   if (!raw) return '';
   const safeExif = exif || {};

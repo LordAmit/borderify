@@ -3,6 +3,7 @@ import { useStore, defaultConfig } from './store';
 import type { TextLabel } from './types';
 import { Type, Square, Database, RotateCcw, Frame, Maximize, Image, Bold, Italic, Download, FileJson, Save, Archive, AlertTriangle } from 'lucide-react';
 
+// [REQ-UI-03] Slider paired with inline -/+ nudge buttons
 const SliderRow = ({ label, value, min, max, step, onChange, onReset }: any) => {
   const numericValue = parseFloat(value) || 0;
   const numericMin = parseFloat(min) || 0;
@@ -23,6 +24,7 @@ const SliderRow = ({ label, value, min, max, step, onChange, onReset }: any) => 
     <div className="compact-slider">
       <div className="label-row">
         <label className="label" title={label}>{label}</label>
+        {/* [REQ-STAT-03] Reset this setting to its default */}
         <button
           onClick={onReset}
           title="Reset"
@@ -390,6 +392,7 @@ const SidebarControls: React.FC<SidebarControlsProps> = ({
         <label className="label" style={{ marginBottom: '8px' }}>Styles</label>
         <StyleGallery config={config} updateConfig={updateConfig} />
 
+        {/* [REQ-UI-02] [REQ-STAT-08] Collapsible sections in fixed order: Layout, Captions, Logo, EXIF, Presets, Export */}
         {/* Layout Settings */}
         <div className="accordion-item">
           <button className="accordion-header" onClick={() => toggleSection('layout')}>
@@ -1223,7 +1226,7 @@ const SidebarControls: React.FC<SidebarControlsProps> = ({
           )}
         </div>
 
-        {/* Manage Presets */}
+        {/* [REQ-UI-04] [REQ-STAT-02] Manage Presets */}
         <div className="accordion-item">
           <button className="accordion-header" onClick={() => toggleSection('presets')}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
@@ -1257,7 +1260,7 @@ const SidebarControls: React.FC<SidebarControlsProps> = ({
           )}
         </div>
 
-        {/* Export Settings */}
+        {/* [REQ-EXPT-03] [REQ-UI-06] Export Settings */}
         <div className="accordion-item">
           <button className="accordion-header" onClick={() => toggleSection('export')}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
