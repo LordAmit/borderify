@@ -14,7 +14,7 @@ This document contains the functional requirements for canvas bounds calculation
 *   **[REQ-REND-05]** If the browser does not support `ctx.roundRect`, then the system shall fallback to rendering standard rectangular borders.
 
 ### Optional Requirements
-*   **[REQ-REND-06]** Where background type is set to `blurred-image`, the system shall downsample the image to a secondary buffer canvas scaled to exactly 10% of the target canvas dimension, apply a CSS canvas filter string of `blur(Xpx)` where X is the product of baseLength and config.layout.backgroundBlurScale, disable image smoothing, and upscale the blurred buffer back to cover the main canvas.
+*   **[REQ-REND-06]** Where background type is set to `blurred-image`, the system shall draw the source image directly onto the main canvas scaled to cover the full canvas and centered, with the canvas filter set to `blur(Xpx)` where X is the product of baseLength and `config.layout.backgroundBlurScale`, and then, where `config.layout.backgroundDimScale` is greater than 0, overlay the whole canvas with black at that opacity.
 *   **[REQ-REND-07]** Where inner image shadows are enabled, the system shall render the shadow offset on a distinct layer below the picture clipping boundary.
 *   **[REQ-REND-08]** Where label stroke overrides are enabled, the system shall render text outlines using the specified stroke color and width scale.
 *   **[REQ-REND-09]** Where inner image radius scale is enabled, the system shall draw the inner photo using a rounded clipping path to round its corners.

@@ -215,8 +215,13 @@ describe('renderPhotoBorder calculations', () => {
     expect(ctx.rect).toHaveBeenCalled();
   });
 
-  it('[REQ-REND-06] downsamples the image to a low-resolution buffer canvas when backgroundType is blurred-image', () => {
+  it('[REQ-REND-06] draws the source image cover-fit with a blur filter of baseLength x backgroundBlurScale when backgroundType is blurred-image', () => {
     const { canvas, ctx } = createMockCanvas();
+    const filterValues: string[] = [];
+    Object.defineProperty(ctx, 'filter', {
+      set: (v: string) => { filterValues.push(v); },
+      get: () => filterValues[filterValues.length - 1] ?? 'none',
+    });
     const imgObj = { width: 3000, height: 2000 } as HTMLImageElement;
     const configWithBlur = {
       ...baseConfig,
@@ -227,7 +232,14 @@ describe('renderPhotoBorder calculations', () => {
       },
     };
     renderPhotoBorder(canvas, mockImageItem, imgObj, configWithBlur, null);
-    expect(ctx.drawImage).toHaveBeenCalled();
+    // baseLength = longest edge (3000) x scale 0.1 = 300px, then reset to 'none' before the foreground draws
+    expect(filterValues[0]).toBe('blur(300px)');
+    expect(filterValues).toContain('none');
+    // Background pass is the first drawImage and uses the source image at full canvas coverage
+    const [firstDrawImageCall] = ctx.drawImage.mock.calls;
+    expect(firstDrawImageCall[0]).toBe(imgObj);
+    expect(firstDrawImageCall[3]).toBeGreaterThanOrEqual(canvas.width);
+    expect(firstDrawImageCall[4]).toBeGreaterThanOrEqual(canvas.height);
   });
 
   it('[REQ-REND-07] renders the inner image shadow offset on a distinct layer below the picture clipping boundary when enabled', () => {
