@@ -297,7 +297,7 @@ describe('App Layout and UI components', () => {
     HTMLAnchorElement.prototype.click = vi.fn();
 
     renderApp();
-    const presetsHeader = screen.getByText(/Presets/i);
+    const presetsHeader = screen.getAllByRole('button').find(btn => btn.className.includes('accordion-header') && btn.textContent?.includes('Presets'))!;
     fireEvent.click(presetsHeader);
 
     const savePresetBtn = screen.getByText(/Save preset/i);

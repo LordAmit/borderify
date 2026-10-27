@@ -1,5 +1,8 @@
 import { describe, it, expect, vi } from 'vitest';
-import { render, screen, fireEvent } from '@testing-library/react';
+import { render, screen, fireEvent, within } from '@testing-library/react';
+import fs from 'fs';
+import path from 'path';
+import { fileURLToPath } from 'url';
 import '@testing-library/jest-dom';
 import SidebarControls from './SidebarControls';
 import { StoreProvider, useStore } from './store';
@@ -570,6 +573,45 @@ describe('SidebarControls Settings Interactions', () => {
       expect(h.getAttribute('aria-controls')).toMatch(/^section-/);
       expect(h.querySelector('[aria-hidden="true"]')).not.toBeNull();
     });
+  });
+
+  it('[REQ-UI-01] collapses the settings into a bottom drawer with a handle and section tabs on narrow viewports', () => {
+    const { container } = setupTest();
+    const sidebar = container.querySelector('aside.sidebar')!;
+    const handle = screen.getByRole('button', { name: /Settings/i });
+    const tabs = within(screen.getByRole('group', { name: /Jump to section/i }));
+
+    // Collapsed by default: the drawer is closed and the handle reports it
+    expect(sidebar).not.toHaveClass('sidebar-open');
+    expect(handle).toHaveAttribute('aria-expanded', 'false');
+    expect(handle).toHaveAttribute('aria-controls', 'sidebar-content');
+    expect(document.getElementById('sidebar-content')).not.toBeNull();
+
+    // Tapping a tab opens the drawer on that section
+    fireEvent.click(tabs.getByRole('button', { name: 'EXIF' }));
+    expect(sidebar).toHaveClass('sidebar-open');
+    expect(handle).toHaveAttribute('aria-expanded', 'true');
+    expect(tabs.getByRole('button', { name: 'EXIF' })).toHaveAttribute('aria-pressed', 'true');
+    const exifHeader = container.querySelector('button[aria-controls="section-exif"]')!;
+    expect(exifHeader).toHaveAttribute('aria-expanded', 'true');
+
+    // The handle closes it again; Escape also closes it
+    fireEvent.click(handle);
+    expect(sidebar).not.toHaveClass('sidebar-open');
+    fireEvent.click(tabs.getByRole('button', { name: 'Export' }));
+    expect(sidebar).toHaveClass('sidebar-open');
+    fireEvent.keyDown(sidebar, { key: 'Escape' });
+    expect(sidebar).not.toHaveClass('sidebar-open');
+
+    // Layout rules: a 768 px breakpoint pins the sidebar to the bottom, keeps the preview above the peek bar,
+    // hides the collapsed content from the tab order, and sizes the viewport with dvh units
+    const css = fs.readFileSync(path.join(path.dirname(fileURLToPath(import.meta.url)), 'index.css'), 'utf-8');
+    const mobile = css.slice(css.indexOf('@media (max-width: 768px)'));
+    expect(mobile).toMatch(/\.sidebar \{[^}]*position: fixed;[^}]*bottom: 0;/);
+    expect(mobile).toMatch(/\.workspace \{[^}]*padding-bottom: var\(--drawer-peek\);/);
+    expect(mobile).toMatch(/\.sidebar:not\(\.sidebar-open\) \.sidebar-content \{[^}]*visibility: hidden;/);
+    expect(css).toMatch(/\.app-container \{[^}]*height: 100dvh;/);
+    expect(css).not.toMatch(/65vh/);
   });
 });
 

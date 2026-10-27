@@ -3,7 +3,7 @@
 This document contains the functional requirements for layouts, settings controls, preset management, image queue, and batch file actions.
 
 ### Ubiquitous Requirements
-*   **[REQ-UI-01]** The system shall render a split-pane layout containing a control drawer/panel on the side (mobile drawer / desktop sidebar) and a canvas preview panel in the main content area.
+*   **[REQ-UI-01]** The system shall render a split-pane layout: on viewports wider than 768 px, a canvas preview panel beside a settings sidebar; on narrower viewports, the canvas preview above a bottom drawer that collapses to a peek bar (a handle plus one tab per settings section) so the preview stays visible while a setting is changed, and that opens on the tapped section.
 *   **[REQ-UI-02]** The system shall organize settings inside distinct collapsible sections for Border, Canvas/Background, Captions, Logo, EXIF, and Export Settings within the control panel.
 *   **[REQ-UI-03]** The system shall pair sliders for scale variables with inline plus and minus buttons to increment or decrement values by step amounts.
 

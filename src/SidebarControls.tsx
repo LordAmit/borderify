@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Type, Square, Database, Image, Download, Save } from 'lucide-react';
+import { Type, Square, Database, Image, Download, Save, ChevronUp, ChevronDown } from 'lucide-react';
 import { useStore } from './store';
 import StyleGallery from './controls/StyleGallery';
 import AccordionSection from './controls/AccordionSection';
@@ -35,20 +35,31 @@ const SidebarControls: React.FC<SidebarControlsProps> = ({
 }) => {
   const { state, updateConfig } = useStore();
   const [openSection, setOpenSection] = useState<SectionId | ''>('layout');
+  // [REQ-UI-01] Below 768 px the sidebar is a bottom drawer; this flag is the open/collapsed state of that drawer
+  const [drawerOpen, setDrawerOpen] = useState(false);
 
   const toggleSection = (section: SectionId) => {
     setOpenSection(openSection === section ? '' : section);
   };
 
+  const jumpToSection = (section: SectionId) => {
+    setOpenSection(section);
+    setDrawerOpen(true);
+  };
+
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === 'Escape' && drawerOpen) setDrawerOpen(false);
+  };
+
   // [REQ-UI-02] [REQ-STAT-08] Collapsible sections in fixed order: Layout, Captions, Logo, EXIF, Presets, Export
-  const sections: { id: SectionId; title: string; icon: React.ReactNode; body: React.ReactNode }[] = [
-    { id: 'layout', title: 'Layout & Border', icon: <Square size={16} />, body: <LayoutSection /> },
-    { id: 'typography', title: 'Caption', icon: <Type size={16} />, body: <CaptionSection hasMultipleImages={hasMultipleImages} /> },
-    { id: 'logo', title: 'Logo', icon: <Image size={16} />, body: <LogoSection /> },
-    { id: 'exif', title: 'EXIF Data', icon: <Database size={16} />, body: <ExifSection /> },
-    { id: 'presets', title: 'Presets', icon: <Save size={16} />, body: <PresetsSection onSavePreset={onSavePreset} onLoadPreset={onLoadPreset} /> },
+  const sections: { id: SectionId; title: string; short: string; icon: React.ReactNode; body: React.ReactNode }[] = [
+    { id: 'layout', title: 'Layout & Border', short: 'Layout', icon: <Square size={16} />, body: <LayoutSection /> },
+    { id: 'typography', title: 'Caption', short: 'Caption', icon: <Type size={16} />, body: <CaptionSection hasMultipleImages={hasMultipleImages} /> },
+    { id: 'logo', title: 'Logo', short: 'Logo', icon: <Image size={16} />, body: <LogoSection /> },
+    { id: 'exif', title: 'EXIF Data', short: 'EXIF', icon: <Database size={16} />, body: <ExifSection /> },
+    { id: 'presets', title: 'Presets', short: 'Presets', icon: <Save size={16} />, body: <PresetsSection onSavePreset={onSavePreset} onLoadPreset={onLoadPreset} /> },
     {
-      id: 'export', title: 'Export', icon: <Download size={16} />,
+      id: 'export', title: 'Export', short: 'Export', icon: <Download size={16} />,
       body: (
         <ExportSection
           onPreviewExport={onPreviewExport}
@@ -63,8 +74,37 @@ const SidebarControls: React.FC<SidebarControlsProps> = ({
   ];
 
   return (
-    <div className="sidebar">
-      <div className="sidebar-content">
+    <aside className={`sidebar${drawerOpen ? ' sidebar-open' : ''}`} aria-label="Settings" onKeyDown={handleKeyDown}>
+      {/* Peek bar: only shown by the mobile stylesheet; on desktop the sidebar is always expanded */}
+      <div className="drawer-bar">
+        <button
+          type="button"
+          className="drawer-handle"
+          aria-expanded={drawerOpen}
+          aria-controls="sidebar-content"
+          onClick={() => setDrawerOpen(!drawerOpen)}
+        >
+          <span className="drawer-grip" aria-hidden="true" />
+          <span className="drawer-handle-label">Settings</span>
+          {drawerOpen ? <ChevronDown size={16} aria-hidden="true" /> : <ChevronUp size={16} aria-hidden="true" />}
+        </button>
+        <div className="drawer-tabs" role="group" aria-label="Jump to section">
+          {sections.map((s) => (
+            <button
+              key={s.id}
+              type="button"
+              className={`drawer-tab${openSection === s.id && drawerOpen ? ' active' : ''}`}
+              aria-pressed={openSection === s.id && drawerOpen}
+              onClick={() => jumpToSection(s.id)}
+            >
+              {s.icon}
+              <span className="drawer-tab-label">{s.short}</span>
+            </button>
+          ))}
+        </div>
+      </div>
+
+      <div className="sidebar-content" id="sidebar-content">
         <span className="label styles-label" id="styles-label">Styles</span>
         <StyleGallery config={state.config} updateConfig={updateConfig} />
 
@@ -81,7 +121,7 @@ const SidebarControls: React.FC<SidebarControlsProps> = ({
           </AccordionSection>
         ))}
       </div>
-    </div>
+    </aside>
   );
 };
 
