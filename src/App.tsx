@@ -15,6 +15,41 @@ function App() {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [isPreviewLoading, setIsPreviewLoading] = useState(false);
+  const previewDialogRef = useRef<HTMLDivElement>(null);
+  const previewCloseRef = useRef<HTMLButtonElement>(null);
+  const previewTriggerRef = useRef<HTMLElement | null>(null);
+
+  // [REQ-UI-10] Preview overlay behaves as a modal dialog: focus moves in, Tab stays inside, Escape closes, focus returns to the trigger
+  useEffect(() => {
+    if (!previewUrl) return;
+    previewCloseRef.current?.focus();
+
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        e.preventDefault();
+        setPreviewUrl(null);
+        return;
+      }
+      if (e.key !== 'Tab' || !previewDialogRef.current) return;
+      const focusable = previewDialogRef.current.querySelectorAll<HTMLElement>('button:not([disabled])');
+      if (focusable.length === 0) return;
+      const first = focusable[0];
+      const last = focusable[focusable.length - 1];
+      if (e.shiftKey && document.activeElement === first) {
+        e.preventDefault();
+        last.focus();
+      } else if (!e.shiftKey && document.activeElement === last) {
+        e.preventDefault();
+        first.focus();
+      }
+    };
+
+    document.addEventListener('keydown', handleKeyDown);
+    return () => {
+      document.removeEventListener('keydown', handleKeyDown);
+      previewTriggerRef.current?.focus();
+    };
+  }, [previewUrl]);
 
   // Dynamically load fonts from Google Fonts for seamless usage
   useEffect(() => {
@@ -275,6 +310,7 @@ function App() {
 
   const handlePreviewExport = async () => {
     if (state.images.length === 0) return;
+    previewTriggerRef.current = document.activeElement as HTMLElement | null;
     setIsPreviewLoading(true);
 
     let targetImage = state.images.find(img => img.id === state.activeImageId);
@@ -382,11 +418,11 @@ function App() {
               onChange={loadPresetJSON}
             />
             <div className="action-group">
-              <button className="btn btn-outline" onClick={() => fileInputRef.current?.click()}>
+              <button type="button" className="btn btn-outline" onClick={() => fileInputRef.current?.click()}>
                 <Upload size={16} /> Browse
               </button>
               {/* [REQ-STAT-06] [REQ-UI-05] Clear all queued images */}
-              <button className="btn btn-danger" onClick={() => clearAllImages()} disabled={state.images.length === 0} title="Clear All Photos">
+              <button type="button" className="btn btn-danger" onClick={() => clearAllImages()} disabled={state.images.length === 0} title="Clear All Photos">
                 <Trash2 size={16} /> Reset
               </button>
             </div>
@@ -400,6 +436,7 @@ function App() {
               <h2 style={{ marginBottom: '8px' }}>No Photos Loaded</h2>
               <p style={{ maxWidth: '300px', fontSize: '14px' }}>Start framing your photos by dropping them here.</p>
               <button
+                type="button"
                 className="btn btn-primary"
                 style={{ marginTop: '20px' }}
                 onClick={() => fileInputRef.current?.click()}
@@ -434,27 +471,29 @@ function App() {
                         flexShrink: 0
                       }}
                     >
-                      <div
+                      {/* [REQ-UI-08] [REQ-UI-09] Thumbnail is a pressable button named by the image alt text */}
+                      <button
+                        type="button"
+                        className="thumbnail-select"
+                        aria-pressed={state.activeImageId === img.id}
                         onClick={() => setActiveImage(img.id)}
                         style={{
-                          cursor: 'pointer',
                           opacity: state.activeImageId === img.id ? 1 : 0.5,
-                          border: state.activeImageId === img.id ? '2px solid #3b82f6' : '2px solid transparent',
-                          borderRadius: '4px',
-                          overflow: 'hidden',
-                          height: '100%',
+                          border: state.activeImageId === img.id ? '2px solid var(--accent-color)' : '2px solid transparent',
                         }}
                       >
-                        <img src={img.objectUrl} style={{ height: '100%', objectFit: 'cover', width: 'auto' }} />
-                      </div>
+                        <img src={img.objectUrl} alt={img.file.name} style={{ height: '100%', objectFit: 'cover', width: 'auto' }} />
+                      </button>
                       <button
+                        type="button"
                         className="thumbnail-remove-btn"
+                        aria-label={`Remove ${img.file.name}`}
                         onClick={(e) => {
                           e.stopPropagation();
                           removeImage(img.id);
                         }}
                       >
-                        <X size={10} />
+                        <X size={12} />
                       </button>
                     </div>
                   ))}
@@ -477,7 +516,12 @@ function App() {
       />
 
       {previewUrl && (
-        <div style={{
+        <div
+          ref={previewDialogRef}
+          role="dialog"
+          aria-modal="true"
+          aria-label="Export preview"
+          style={{
           position: 'fixed',
           top: 0, left: 0, right: 0, bottom: 0,
           backgroundColor: 'rgba(0,0,0,0.85)',
@@ -495,14 +539,14 @@ function App() {
             display: 'flex',
             gap: '12px'
           }}>
-            <button className="btn btn-primary" onClick={handleExportSingle}>
+            <button type="button" className="btn btn-primary" onClick={handleExportSingle}>
               <Download size={16} /> Save Image
             </button>
-            <button className="btn btn-outline" onClick={() => setPreviewUrl(null)} style={{ background: 'var(--surface-color)' }}>
+            <button type="button" ref={previewCloseRef} className="btn btn-outline" onClick={() => setPreviewUrl(null)} style={{ background: 'var(--surface-color)' }}>
               <X size={16} /> Close Preview
             </button>
           </div>
-          <img src={previewUrl} style={{ maxWidth: '100%', maxHeight: '100%', objectFit: 'contain', boxShadow: '0 10px 30px rgba(0,0,0,0.5)' }} />
+          <img src={previewUrl} alt="Export preview of the current image at export quality" style={{ maxWidth: '100%', maxHeight: '100%', objectFit: 'contain', boxShadow: '0 10px 30px rgba(0,0,0,0.5)' }} />
         </div>
       )}
     </div>

@@ -1,10 +1,12 @@
-import React, { useState } from 'react';
+import React, { useState, useId } from 'react';
 import { useStore, defaultConfig } from './store';
 import type { TextLabel } from './types';
 import { Type, Square, Database, RotateCcw, Frame, Maximize, Image, Bold, Italic, Download, FileJson, Save, Archive, AlertTriangle } from 'lucide-react';
 
 // [REQ-UI-03] Slider paired with inline -/+ nudge buttons
 const SliderRow = ({ label, value, min, max, step, onChange, onReset }: any) => {
+  // [REQ-UI-07] [REQ-UI-09] One generated id ties the visible label to the range input; icon buttons get names from the same label
+  const sliderId = useId();
   const numericValue = parseFloat(value) || 0;
   const numericMin = parseFloat(min) || 0;
   const numericMax = parseFloat(max) || 0;
@@ -23,11 +25,13 @@ const SliderRow = ({ label, value, min, max, step, onChange, onReset }: any) => 
   return (
     <div className="compact-slider">
       <div className="label-row">
-        <label className="label" title={label}>{label}</label>
+        <label className="label" title={label} htmlFor={sliderId}>{label}</label>
         {/* [REQ-STAT-03] Reset this setting to its default */}
         <button
+          type="button"
           onClick={onReset}
           title="Reset"
+          aria-label={`Reset ${label}`}
           style={{ background: 'none', border: 'none', padding: 0, cursor: 'pointer', color: '#94a3b8', display: 'flex', alignItems: 'center' }}
         >
           <RotateCcw size={12} />
@@ -35,6 +39,8 @@ const SliderRow = ({ label, value, min, max, step, onChange, onReset }: any) => 
       </div>
       <div className="slider-container">
         <button
+          type="button"
+          aria-label={`Decrease ${label}`}
           onClick={() => handleNudge('prev')}
           style={{
             background: 'rgba(255, 255, 255, 0.05)',
@@ -61,6 +67,7 @@ const SliderRow = ({ label, value, min, max, step, onChange, onReset }: any) => 
           −
         </button>
         <input 
+          id={sliderId}
           type="range" 
           style={{ width: '100%', flex: 1, accentColor: 'var(--accent-color)' }} 
           min={min} 
@@ -70,6 +77,8 @@ const SliderRow = ({ label, value, min, max, step, onChange, onReset }: any) => 
           onChange={(e) => onChange(parseFloat(e.target.value))} 
         />
         <button
+          type="button"
+          aria-label={`Increase ${label}`}
           onClick={() => handleNudge('next')}
           style={{
             background: 'rgba(255, 255, 255, 0.05)',
@@ -100,12 +109,15 @@ const SliderRow = ({ label, value, min, max, step, onChange, onReset }: any) => 
   );
 };
 
-const ChipGroup = ({ options, value, onChange }: any) => (
-  <div className="chip-group">
+// [REQ-UI-08] Chips are real buttons that expose their selected state
+const ChipGroup = ({ options, value, onChange, label }: any) => (
+  <div className="chip-group" role="group" aria-label={label}>
     {options.map((opt: any) => (
       <button
         key={opt.value}
+        type="button"
         className={`chip ${value === opt.value ? 'active' : ''}`}
+        aria-pressed={value === opt.value}
         onClick={() => onChange(opt.value)}
       >
         {opt.label}
@@ -114,7 +126,8 @@ const ChipGroup = ({ options, value, onChange }: any) => (
   </div>
 );
 
-const GridPositionSelector = ({ value, onChange }: any) => {
+// [REQ-UI-08] Position dots are focusable buttons named after the position they select
+const GridPositionSelector = ({ value, onChange, label }: any) => {
   const grid = [
     ['Top Left', 'Top Center', 'Top Right'],
     ['Middle Left', 'Center', 'Middle Right'],
@@ -122,11 +135,14 @@ const GridPositionSelector = ({ value, onChange }: any) => {
   ];
 
   return (
-    <div className="grid-position-selector">
+    <div className="grid-position-selector" role="group" aria-label={label}>
       {grid.flat().map((pos) => (
-        <div
+        <button
           key={pos}
+          type="button"
           className={`grid-dot ${value === pos ? 'active' : ''}`}
+          aria-pressed={value === pos}
+          aria-label={pos}
           onClick={() => onChange(pos)}
           title={pos}
         />
@@ -203,17 +219,23 @@ const StyleGallery = ({ config, updateConfig }: any) => {
   ];
 
   return (
-    <div className="style-gallery">
-      {styles.map(s => (
-        <div
-          key={s.id}
-          className={`style-card ${config.layout.innerBorderMode === s.id || (s.id === 'polaroid' && config.layout.innerBorderMode === 'polaroid') ? 'active' : ''}`}
-          onClick={() => updateConfig(s.apply)}
-        >
-          {s.icon}
-          <span className="style-card-title">{s.name}</span>
-        </div>
-      ))}
+    // [REQ-UI-08] Style cards are buttons so the gallery is keyboard-operable
+    <div className="style-gallery" role="group" aria-labelledby="styles-label">
+      {styles.map(s => {
+        const isActive = config.layout.innerBorderMode === s.id;
+        return (
+          <button
+            key={s.id}
+            type="button"
+            className={`style-card ${isActive ? 'active' : ''}`}
+            aria-pressed={isActive}
+            onClick={() => updateConfig(s.apply)}
+          >
+            {s.icon}
+            <span className="style-card-title">{s.name}</span>
+          </button>
+        );
+      })}
     </div>
   );
 };
@@ -222,13 +244,18 @@ const StyleGallery = ({ config, updateConfig }: any) => {
 
 const TagBar = ({ value, onChange, tags }: { value: string, onChange: (val: string) => void, tags: string[] }) => {
   return (
-    <div className="chip-group" style={{ marginTop: '8px', display: 'flex', flexWrap: 'wrap', gap: '4px' }}>
+    // [REQ-UI-08] EXIF tag chips are toggle buttons
+    <div className="chip-group" role="group" aria-label="Caption EXIF tags" style={{ marginTop: '8px', display: 'flex', flexWrap: 'wrap', gap: '4px' }}>
       {tags.map(tagStr => {
         const isActive = value.includes(tagStr);
+        const tagName = tagStr.replace('{', '').replace('}', '');
         return (
-          <span
+          <button
             key={tagStr}
+            type="button"
             className="chip"
+            aria-pressed={isActive}
+            aria-label={`${isActive ? 'Remove' : 'Add'} ${tagName} tag`}
             style={{
               fontSize: '10px',
               padding: '2px 6px',
@@ -249,8 +276,8 @@ const TagBar = ({ value, onChange, tags }: { value: string, onChange: (val: stri
               }
             }}
           >
-            {isActive ? '−' : '+'}{tagStr.replace('{', '').replace('}', '')}
-          </span>
+            {isActive ? '−' : '+'}{tagName}
+          </button>
         );
       })}
     </div>
@@ -389,24 +416,26 @@ const SidebarControls: React.FC<SidebarControlsProps> = ({
     <div className="sidebar">
       <div className="sidebar-content">
 
-        <label className="label" style={{ marginBottom: '8px' }}>Styles</label>
+        <span className="label" id="styles-label" style={{ marginBottom: '8px' }}>Styles</span>
         <StyleGallery config={config} updateConfig={updateConfig} />
 
         {/* [REQ-UI-02] [REQ-STAT-08] Collapsible sections in fixed order: Layout, Captions, Logo, EXIF, Presets, Export */}
+        {/* [REQ-UI-11] Section headers expose expanded state and point at the panel they control */}
         {/* Layout Settings */}
         <div className="accordion-item">
-          <button className="accordion-header" onClick={() => toggleSection('layout')}>
+          <button className="accordion-header" type="button" aria-expanded={openSection === 'layout'} aria-controls="section-layout" onClick={() => toggleSection('layout')}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
               <Square size={16} /> Layout & Border
             </div>
-            <span>{openSection === 'layout' ? '▲' : '▼'}</span>
+            <span aria-hidden="true">{openSection === 'layout' ? '▲' : '▼'}</span>
           </button>
 
           {openSection === 'layout' && (
-            <div className="accordion-body">
+            <div className="accordion-body" id="section-layout">
               <div className="control-group">
-                <label className="label">Ratio</label>
+                <span className="label">Ratio</span>
                 <ChipGroup
+                  label="Ratio"
                   value={config.layout.aspectRatio}
                   onChange={(val: string) => updateConfig(c => ({ ...c, layout: { ...c.layout, aspectRatio: val } }))}
                   options={[
@@ -423,8 +452,9 @@ const SidebarControls: React.FC<SidebarControlsProps> = ({
               </div>
 
               <div className="control-group">
-                <label className="label">Background</label>
+                <label className="label" htmlFor="layout-background-type">Background</label>
                 <select
+                  id="layout-background-type"
                   className="input-field"
                   value={config.layout.backgroundType}
                   onChange={(e) => updateConfig(c => ({ ...c, layout: { ...c.layout, backgroundType: e.target.value as any } }))}
@@ -436,8 +466,9 @@ const SidebarControls: React.FC<SidebarControlsProps> = ({
 
               {config.layout.backgroundType === 'color' && (
                 <div className="control-group">
-                  <label className="label">Background</label>
+                  <label className="label" htmlFor="layout-background-color">Background</label>
                   <input
+                    id="layout-background-color"
                     type="color"
                     className="input-field"
                     style={{ height: '40px', padding: '2px' }}
@@ -477,8 +508,9 @@ const SidebarControls: React.FC<SidebarControlsProps> = ({
               </div>
 
               <div className="control-group">
-                <label className="label">Frame</label>
+                <label className="label" htmlFor="layout-frame-color">Frame</label>
                 <input
+                  id="layout-frame-color"
                   type="color"
                   className="input-field"
                   style={{ height: '36px', padding: '2px' }}
@@ -487,19 +519,23 @@ const SidebarControls: React.FC<SidebarControlsProps> = ({
                 />
               </div>
 
-              <div
+              {/* [REQ-UI-08] Advanced toggles are buttons with expanded state */}
+              <button
+                type="button"
                 className="advanced-toggle"
+                aria-expanded={showAdvancedLayout}
                 onClick={() => setShowAdvancedLayout(!showAdvancedLayout)}
               >
                 <span>Advanced Border & Effects</span>
-                <span>{showAdvancedLayout ? '−' : '+'}</span>
-              </div>
+                <span aria-hidden="true">{showAdvancedLayout ? '−' : '+'}</span>
+              </button>
 
               {showAdvancedLayout && (
                 <div className="advanced-section">
                   <div className="control-group">
-                    <label className="label">Border Style</label>
+                    <label className="label" htmlFor="layout-border-style">Border Style</label>
                     <select
+                      id="layout-border-style"
                       className="input-field"
                       value={config.layout.innerBorderMode}
                       onChange={(e) => {
@@ -632,8 +668,9 @@ const SidebarControls: React.FC<SidebarControlsProps> = ({
                   />
 
                   <div className="control-group">
-                    <label className="label">Photo Border Color</label>
+                    <label className="label" htmlFor="layout-photo-border-color">Photo Border Color</label>
                     <input
+                      id="layout-photo-border-color"
                       type="color"
                       className="input-field"
                       style={{ height: '36px', padding: '2px' }}
@@ -649,15 +686,15 @@ const SidebarControls: React.FC<SidebarControlsProps> = ({
 
         {/* Caption Settings */}
         <div className="accordion-item">
-          <button className="accordion-header" onClick={() => toggleSection('typography')}>
+          <button className="accordion-header" type="button" aria-expanded={openSection === 'typography'} aria-controls="section-typography" onClick={() => toggleSection('typography')}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
               <Type size={16} /> Caption
             </div>
-            <span>{openSection === 'typography' ? '▲' : '▼'}</span>
+            <span aria-hidden="true">{openSection === 'typography' ? '▲' : '▼'}</span>
           </button>
 
           {openSection === 'typography' && config.labels.length > 0 && (
-            <div className="accordion-body">
+            <div className="accordion-body" id="section-typography">
               {activeImageObj && !hasExif && (
                 <div style={{
                   display: 'flex',
@@ -677,8 +714,9 @@ const SidebarControls: React.FC<SidebarControlsProps> = ({
                 </div>
               )}
               <div className="control-group">
-                <label className="label">Caption Text</label>
+                <label className="label" htmlFor="caption-text">Caption Text</label>
                 <textarea
+                  id="caption-text"
                   className="input-field"
                   rows={2}
                   style={{ resize: 'vertical' }}
@@ -772,9 +810,10 @@ const SidebarControls: React.FC<SidebarControlsProps> = ({
               )}
 
               <div className="control-group">
-                <label className="label">Font</label>
+                <label className="label" htmlFor="caption-font">Font</label>
                 <div style={{ display: 'flex', gap: '8px' }}>
                   <input
+                    id="caption-font"
                     type="text"
                     className="input-field"
                     value={activeLabelStyle.fontFamily}
@@ -784,6 +823,7 @@ const SidebarControls: React.FC<SidebarControlsProps> = ({
                     type="file"
                     accept=".ttf,.otf,.woff,.woff2"
                     id="font-upload"
+                    aria-label="Upload font file"
                     style={{ display: 'none' }}
                     onChange={(e) => {
                       const file = e.target.files?.[0];
@@ -815,14 +855,19 @@ const SidebarControls: React.FC<SidebarControlsProps> = ({
                     }}
                   />
                   <button
+                    type="button"
                     className="btn btn-outline"
                     onClick={() => document.getElementById('font-upload')?.click()}
                     title="Upload Font"
+                    aria-label="Upload font file"
                     style={{ padding: '8px', minWidth: '40px' }}
                   >
                     +
                   </button>
                   <button
+                    type="button"
+                    aria-label="Bold"
+                    aria-pressed={activeLabelStyle.fontWeight === 'bold'}
                     className={`btn btn-outline ${activeLabelStyle.fontWeight === 'bold' ? 'active' : ''}`}
                     style={{ padding: '0 12px', minWidth: '40px', borderColor: activeLabelStyle.fontWeight === 'bold' ? 'var(--accent-color)' : '' }}
                     onClick={() => handleStyleChange({ fontWeight: activeLabelStyle.fontWeight === 'bold' ? 'normal' : 'bold' })}
@@ -830,6 +875,9 @@ const SidebarControls: React.FC<SidebarControlsProps> = ({
                     <Bold size={16} />
                   </button>
                   <button
+                    type="button"
+                    aria-label="Italic"
+                    aria-pressed={activeLabelStyle.fontStyle === 'italic'}
                     className={`btn btn-outline ${activeLabelStyle.fontStyle === 'italic' ? 'active' : ''}`}
                     style={{ padding: '0 12px', minWidth: '40px', borderColor: activeLabelStyle.fontStyle === 'italic' ? 'var(--accent-color)' : '' }}
                     onClick={() => handleStyleChange({ fontStyle: activeLabelStyle.fontStyle === 'italic' ? 'normal' : 'italic' })}
@@ -849,9 +897,10 @@ const SidebarControls: React.FC<SidebarControlsProps> = ({
               />
 
               <div className="control-group">
-                <label className="label">Text Position</label>
+                <span className="label">Text Position</span>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                   <GridPositionSelector
+                    label="Text Position"
                     value={activeLabelStyle.position}
                     onChange={(pos: any) => handleStyleChange({ position: pos })}
                   />
@@ -861,8 +910,9 @@ const SidebarControls: React.FC<SidebarControlsProps> = ({
 
               <div className="flex-row">
                 <div className="control-group">
-                  <label className="label">Color</label>
+                  <label className="label" htmlFor="caption-color">Color</label>
                   <input
+                    id="caption-color"
                     type="color"
                     className="input-field"
                     style={{ height: '36px', padding: '2px' }}
@@ -871,8 +921,9 @@ const SidebarControls: React.FC<SidebarControlsProps> = ({
                   />
                 </div>
                 <div className="control-group">
-                  <label className="label">Border</label>
+                  <label className="label" htmlFor="caption-stroke-color">Border</label>
                   <input
+                    id="caption-stroke-color"
                     type="color"
                     className="input-field"
                     style={{ height: '36px', padding: '2px' }}
@@ -909,18 +960,19 @@ const SidebarControls: React.FC<SidebarControlsProps> = ({
 
         {/* Logo Settings */}
         <div className="accordion-item">
-          <button className="accordion-header" onClick={() => toggleSection('logo')}>
+          <button className="accordion-header" type="button" aria-expanded={openSection === 'logo'} aria-controls="section-logo" onClick={() => toggleSection('logo')}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
               <Image size={16} /> Logo
             </div>
-            <span>{openSection === 'logo' ? '▲' : '▼'}</span>
+            <span aria-hidden="true">{openSection === 'logo' ? '▲' : '▼'}</span>
           </button>
 
           {openSection === 'logo' && (
-            <div className="accordion-body">
+            <div className="accordion-body" id="section-logo">
               <div className="control-group">
-                <label className="label">Upload Logo</label>
+                <label className="label" htmlFor="logo-upload">Upload Logo</label>
                 <input
+                  id="logo-upload"
                   type="file"
                   accept="image/png, image/jpeg, image/svg+xml"
                   onChange={(e) => {
@@ -941,6 +993,7 @@ const SidebarControls: React.FC<SidebarControlsProps> = ({
                 <>
                   <div className="control-group">
                     <button
+                      type="button"
                       className="btn btn-outline"
                       style={{ width: '100%' }}
                       onClick={() => updateConfig(c => ({ ...c, logo: { ...c.logo, dataUrl: null } }))}
@@ -958,9 +1011,10 @@ const SidebarControls: React.FC<SidebarControlsProps> = ({
                   />
 
                   <div className="control-group">
-                    <label className="label">Position</label>
+                    <span className="label">Position</span>
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                       <GridPositionSelector
+                        label="Logo Position"
                         value={config.logo.position}
                         onChange={(pos: any) => updateConfig(c => ({
                           ...c, logo: { ...c.logo, position: pos }
@@ -992,15 +1046,15 @@ const SidebarControls: React.FC<SidebarControlsProps> = ({
 
         {/* EXIF Setting */}
         <div className="accordion-item">
-          <button className="accordion-header" onClick={() => toggleSection('exif')}>
+          <button className="accordion-header" type="button" aria-expanded={openSection === 'exif'} aria-controls="section-exif" onClick={() => toggleSection('exif')}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
               <Database size={16} /> EXIF Data
             </div>
-            <span>{openSection === 'exif' ? '▲' : '▼'}</span>
+            <span aria-hidden="true">{openSection === 'exif' ? '▲' : '▼'}</span>
           </button>
 
           {openSection === 'exif' && (
-            <div className="accordion-body">
+            <div className="accordion-body" id="section-exif">
               {activeImageObj && !hasExif && (
                 <div style={{
                   display: 'flex',
@@ -1031,9 +1085,10 @@ const SidebarControls: React.FC<SidebarControlsProps> = ({
               {config.exifPills.show && (
                 <>
                   <div className="control-group">
-                    <label className="label">EXIF Position</label>
+                    <span className="label">EXIF Position</span>
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                       <GridPositionSelector
+                        label="EXIF Position"
                         value={config.exifPills.position}
                         onChange={(pos: any) => updateConfig(c => ({
                           ...c, exifPills: { ...c.exifPills, position: pos }
@@ -1061,8 +1116,9 @@ const SidebarControls: React.FC<SidebarControlsProps> = ({
 
 
                   <div className="control-group">
-                    <label className="label">Displayed Data</label>
-                    <div className="chip-group" style={{ display: 'flex', flexWrap: 'wrap', gap: '6px', marginTop: '4px' }}>
+                    <span className="label">Displayed Data</span>
+                    {/* [REQ-UI-08] Displayed-data chips are toggle buttons */}
+                    <div className="chip-group" role="group" aria-label="Displayed Data" style={{ display: 'flex', flexWrap: 'wrap', gap: '6px', marginTop: '4px' }}>
                       {[
                         { key: 'showCamera', label: 'Camera' },
                         { key: 'showLens', label: 'Lens' },
@@ -1074,8 +1130,10 @@ const SidebarControls: React.FC<SidebarControlsProps> = ({
                       ].map(item => {
                         const isActive = (config.exifPills as any)[item.key];
                         return (
-                          <span
+                          <button
                             key={item.key}
+                            type="button"
+                            aria-pressed={isActive}
                             className={`chip ${isActive ? 'active' : ''}`}
                             style={{
                               fontSize: '11px',
@@ -1095,27 +1153,30 @@ const SidebarControls: React.FC<SidebarControlsProps> = ({
                             }))}
                           >
                             {isActive ? '✓ ' : '+ '}{item.label}
-                          </span>
+                          </button>
                         );
                       })}
                     </div>
                   </div>
 
 
-                  <div
+                  <button
+                    type="button"
                     className="advanced-toggle"
+                    aria-expanded={showAdvancedExif}
                     onClick={() => setShowAdvancedExif(!showAdvancedExif)}
                   >
                     <span>Advanced EXIF Positioning & Styles</span>
-                    <span>{showAdvancedExif ? '−' : '+'}</span>
-                  </div>
+                    <span aria-hidden="true">{showAdvancedExif ? '−' : '+'}</span>
+                  </button>
 
                   {showAdvancedExif && (
                     <div className="advanced-section">
                       <div className="flex-row">
                         <div className="control-group">
-                          <label className="label">Custom Camera</label>
+                          <label className="label" htmlFor="exif-custom-camera">Custom Camera</label>
                           <input
+                            id="exif-custom-camera"
                             type="text"
                             className="input-field"
                             placeholder="e.g. {make} {model}"
@@ -1124,8 +1185,9 @@ const SidebarControls: React.FC<SidebarControlsProps> = ({
                           />
                         </div>
                         <div className="control-group">
-                          <label className="label">Custom Lens</label>
+                          <label className="label" htmlFor="exif-custom-lens">Custom Lens</label>
                           <input
+                            id="exif-custom-lens"
                             type="text"
                             className="input-field"
                             placeholder="e.g. {lens}"
@@ -1152,8 +1214,9 @@ const SidebarControls: React.FC<SidebarControlsProps> = ({
 
                       <div className="flex-row">
                         <div className="control-group">
-                          <label className="label">Background</label>
+                          <label className="label" htmlFor="exif-box-color">Background</label>
                           <input
+                            id="exif-box-color"
                             type="color"
                             className="input-field"
                             style={{ height: '36px', padding: '2px' }}
@@ -1162,8 +1225,9 @@ const SidebarControls: React.FC<SidebarControlsProps> = ({
                           />
                         </div>
                         <div className="control-group">
-                          <label className="label">Text</label>
+                          <label className="label" htmlFor="exif-text-color">Text</label>
                           <input
+                            id="exif-text-color"
                             type="color"
                             className="input-field"
                             style={{ height: '36px', padding: '2px' }}
@@ -1172,8 +1236,9 @@ const SidebarControls: React.FC<SidebarControlsProps> = ({
                           />
                         </div>
                         <div className="control-group">
-                          <label className="label">Border</label>
+                          <label className="label" htmlFor="exif-stroke-color">Border</label>
                           <input
+                            id="exif-stroke-color"
                             type="color"
                             className="input-field"
                             style={{ height: '36px', padding: '2px' }}
@@ -1184,8 +1249,9 @@ const SidebarControls: React.FC<SidebarControlsProps> = ({
                       </div>
 
                       <div className="control-group">
-                        <label className="label">EXIF Font</label>
+                        <label className="label" htmlFor="exif-font">EXIF Font</label>
                         <input
+                          id="exif-font"
                           type="text"
                           className="input-field"
                           value={config.exifPills.fontFamily}
@@ -1228,20 +1294,21 @@ const SidebarControls: React.FC<SidebarControlsProps> = ({
 
         {/* [REQ-UI-04] [REQ-STAT-02] Manage Presets */}
         <div className="accordion-item">
-          <button className="accordion-header" onClick={() => toggleSection('presets')}>
+          <button className="accordion-header" type="button" aria-expanded={openSection === 'presets'} aria-controls="section-presets" onClick={() => toggleSection('presets')}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
               <Save size={16} /> Presets
             </div>
-            <span>{openSection === 'presets' ? '▲' : '▼'}</span>
+            <span aria-hidden="true">{openSection === 'presets' ? '▲' : '▼'}</span>
           </button>
 
           {openSection === 'presets' && (
-            <div className="accordion-body">
+            <div className="accordion-body" id="section-presets">
               <p style={{ fontSize: '12px', color: 'var(--text-secondary)', marginBottom: '12px', lineHeight: '1.4' }}>
                 Save your layout, branding, and EXIF settings to a file, or load an existing template file.
               </p>
               <div style={{ display: 'flex', gap: '10px' }}>
                 <button
+                  type="button"
                   className="btn-preset-save"
                   style={{ flex: 1 }}
                   onClick={onSavePreset}
@@ -1249,6 +1316,7 @@ const SidebarControls: React.FC<SidebarControlsProps> = ({
                   <Save size={14} /> Save preset
                 </button>
                 <button
+                  type="button"
                   className="btn-preset-load"
                   style={{ flex: 1 }}
                   onClick={onLoadPreset}
@@ -1262,18 +1330,19 @@ const SidebarControls: React.FC<SidebarControlsProps> = ({
 
         {/* [REQ-EXPT-03] [REQ-UI-06] Export Settings */}
         <div className="accordion-item">
-          <button className="accordion-header" onClick={() => toggleSection('export')}>
+          <button className="accordion-header" type="button" aria-expanded={openSection === 'export'} aria-controls="section-export" onClick={() => toggleSection('export')}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
               <Download size={16} /> Export
             </div>
-            <span>{openSection === 'export' ? '▲' : '▼'}</span>
+            <span aria-hidden="true">{openSection === 'export' ? '▲' : '▼'}</span>
           </button>
 
           {openSection === 'export' && (
-            <div className="accordion-body">
+            <div className="accordion-body" id="section-export">
               <div className="control-group">
-                <label className="label">Resolution Limit</label>
+                <label className="label" htmlFor="export-resolution">Resolution Limit</label>
                 <select
+                  id="export-resolution"
                   className="input-field"
                   value={config.export?.maxResolution || "Original"}
                   onChange={(e) => updateConfig(c => ({

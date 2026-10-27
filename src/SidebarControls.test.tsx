@@ -456,5 +456,120 @@ describe('SidebarControls Settings Interactions', () => {
     expect(titles[4]).toContain('Presets');
     expect(titles[5]).toContain('Export');
   });
+
+  // ---- Accessibility requirements ----
+
+  const hasAccessibleName = (el: Element) => {
+    const control = el as HTMLInputElement;
+    const labelled = (control.labels?.length ?? 0) > 0;
+    const named = !!control.getAttribute('aria-label') || !!control.getAttribute('aria-labelledby');
+    return labelled || named;
+  };
+
+  const openSection = (title: string) => {
+    const header = screen.getAllByRole('button').find(btn => btn.className.includes('accordion-header') && btn.textContent?.includes(title))!;
+    if (header.getAttribute('aria-expanded') !== 'true') fireEvent.click(header);
+  };
+
+  it('[REQ-UI-07] associates every slider, color picker, select and text field with a label', () => {
+    const { container } = setupTest();
+
+    // Visit each section (one open at a time) and expand advanced panels
+    const sections = ['Layout & Border', 'Caption', 'Logo', 'EXIF Data', 'Export'];
+    const unnamed: string[] = [];
+    sections.forEach(title => {
+      openSection(title);
+      if (title === 'Layout & Border') fireEvent.click(screen.getByRole('button', { name: /Advanced Border/i }));
+      if (title === 'EXIF Data') {
+        const show = screen.getByLabelText(/Show EXIF Pills/i) as HTMLInputElement;
+        if (!show.checked) fireEvent.click(show);
+        fireEvent.click(screen.getByRole('button', { name: /Advanced EXIF/i }));
+      }
+      container.querySelectorAll('input, select, textarea').forEach(el => {
+        if (!hasAccessibleName(el)) unnamed.push(`${title}: <${el.tagName.toLowerCase()} type=${el.getAttribute('type')}>`);
+      });
+    });
+    expect(unnamed).toEqual([]);
+
+    // Spot checks: labels resolve to the right control types
+    openSection('Layout & Border');
+    expect(screen.getByLabelText(/Frame Size/i, { selector: 'input' })).toHaveAttribute('type', 'range');
+    expect(screen.getByLabelText('Frame', { selector: 'input' })).toHaveAttribute('type', 'color');
+    const backgroundType = screen.getByLabelText('Background', { selector: 'select' }) as HTMLSelectElement;
+    fireEvent.change(backgroundType, { target: { value: 'color' } });
+    const backgrounds = screen.getAllByLabelText('Background', { selector: 'input, select' });
+    expect(backgrounds.map(b => b.tagName.toLowerCase()).sort()).toEqual(['input', 'select']);
+  });
+
+  it('[REQ-UI-08] renders style cards, position dots, tag chips, advanced toggles and ratio chips as pressable buttons', () => {
+    setupTest();
+
+    // Style cards: Polaroid is the default mode, so it starts pressed; Museum switches the mode away from it
+    const polaroid = screen.getByRole('button', { name: 'Polaroid' });
+    expect(polaroid).toHaveAttribute('aria-pressed', 'true');
+    fireEvent.click(screen.getByRole('button', { name: 'Museum' }));
+    expect(screen.getByRole('button', { name: 'Polaroid' })).toHaveAttribute('aria-pressed', 'false');
+    fireEvent.click(screen.getByRole('button', { name: 'Polaroid' }));
+    expect(screen.getByRole('button', { name: 'Polaroid' })).toHaveAttribute('aria-pressed', 'true');
+
+    // Ratio chips
+    const square = screen.getByRole('button', { name: '1:1' });
+    fireEvent.click(square);
+    expect(screen.getByRole('button', { name: '1:1' })).toHaveAttribute('aria-pressed', 'true');
+    expect(screen.getByRole('button', { name: 'ORIG' })).toHaveAttribute('aria-pressed', 'false');
+
+    // Advanced toggle
+    const advanced = screen.getByRole('button', { name: /Advanced Border/i });
+    expect(advanced).toHaveAttribute('aria-expanded', 'false');
+    fireEvent.click(advanced);
+    expect(advanced).toHaveAttribute('aria-expanded', 'true');
+
+    // Position dots and tag chips live in the Caption section
+    openSection('Caption');
+    const topLeft = screen.getByRole('button', { name: 'Top Left' });
+    expect(topLeft).toHaveAttribute('aria-pressed', 'false');
+    fireEvent.click(topLeft);
+    expect(screen.getByRole('button', { name: 'Top Left' })).toHaveAttribute('aria-pressed', 'true');
+    let stateObj = JSON.parse(screen.getByTestId('store-state').textContent || '{}');
+    expect(stateObj.labels[0].position).toBe('Top Left');
+
+    // Tag chips: the name states the action (Add/Remove) and aria-pressed states whether the tag is in the caption
+    const isoChip = screen.getByRole('button', { name: /(Add|Remove) iso tag/i });
+    const wasActive = isoChip.getAttribute('aria-pressed') === 'true';
+    expect(isoChip).toHaveAccessibleName(wasActive ? /Remove iso tag/i : /Add iso tag/i);
+    fireEvent.click(isoChip);
+    const toggled = screen.getByRole('button', { name: wasActive ? /Add iso tag/i : /Remove iso tag/i });
+    expect(toggled).toHaveAttribute('aria-pressed', String(!wasActive));
+    stateObj = JSON.parse(screen.getByTestId('store-state').textContent || '{}');
+    expect(stateObj.labels[0].text.includes('{iso}')).toBe(!wasActive);
+
+    // Displayed-data chips in the EXIF section
+    openSection('EXIF Data');
+    const camera = screen.getByRole('button', { name: /Camera/i });
+    expect(camera).toHaveAttribute('aria-pressed');
+  });
+
+  it('[REQ-UI-11] exposes section expanded state through aria-expanded and aria-controls', () => {
+    const { container } = setupTest();
+    const headers = Array.from(container.querySelectorAll('button.accordion-header'));
+    expect(headers.length).toBe(6);
+
+    const layout = headers.find(h => h.textContent?.includes('Layout'))!;
+    const caption = headers.find(h => h.textContent?.includes('Caption'))!;
+    expect(layout).toHaveAttribute('aria-expanded', 'true');
+    expect(caption).toHaveAttribute('aria-expanded', 'false');
+    expect(document.getElementById(layout.getAttribute('aria-controls')!)).not.toBeNull();
+
+    fireEvent.click(caption);
+    expect(caption).toHaveAttribute('aria-expanded', 'true');
+    expect(layout).toHaveAttribute('aria-expanded', 'false');
+    expect(document.getElementById(caption.getAttribute('aria-controls')!)).not.toBeNull();
+
+    // Every header controls a panel id and hides its arrow glyph from assistive technology
+    headers.forEach(h => {
+      expect(h.getAttribute('aria-controls')).toMatch(/^section-/);
+      expect(h.querySelector('[aria-hidden="true"]')).not.toBeNull();
+    });
+  });
 });
 

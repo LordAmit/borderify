@@ -11,3 +11,10 @@ This document contains the functional requirements for layouts, settings control
 *   **[REQ-UI-04]** The system shall allow exporting the current configuration object as a JSON file, and overwriting configuration states when a preset JSON file is uploaded.
 *   **[REQ-UI-05]** The system shall maintain an image queue panel displaying thumbnails of loaded files, with controls to select the active image, delete individual images, or clear all queue contents.
 *   **[REQ-UI-06]** When batch download is triggered, the system shall process all queued images sequentially and download them compiled inside a single ZIP file.
+
+### Accessibility Requirements
+*   **[REQ-UI-07]** The system shall associate every settings control (slider, color picker, select, text field) with a visible label through a programmatic name so that assistive technology announces the control by that label.
+*   **[REQ-UI-08]** The system shall render every clickable control (style cards, position dots, EXIF tag chips, advanced-section toggles, queue thumbnails) as a keyboard-focusable button that exposes its selected state through `aria-pressed`.
+*   **[REQ-UI-09]** The system shall give every icon-only button an accessible name and every queue thumbnail and export preview image alternative text.
+*   **[REQ-UI-10]** While the export preview overlay is open, the system shall present it as a modal dialog that receives keyboard focus, keeps Tab focus inside it, closes on Escape, and returns focus to the control that opened it.
+*   **[REQ-UI-11]** The system shall expose the expanded or collapsed state of each collapsible settings section through `aria-expanded` and show a visible focus ring on every focusable control.

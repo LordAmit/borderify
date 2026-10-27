@@ -330,4 +330,63 @@ describe('App Layout and UI components', () => {
 
     FileReader.prototype.readAsDataURL = originalReadAsDataURL;
   });
+
+  // ---- Accessibility requirements ----
+
+  it('[REQ-UI-09] names icon-only buttons and gives thumbnails and the preview image alt text', () => {
+    renderApp([mockImage1, mockImage2]);
+
+    // Thumbnail images carry the file name as alt text, and the select button takes its name from it
+    expect(screen.getByRole('img', { name: 'photo1.jpg' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'photo2.png' })).toHaveAttribute('aria-pressed', 'false');
+
+    // Icon-only remove buttons are named per image
+    expect(screen.getByRole('button', { name: 'Remove photo1.jpg' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Remove photo2.png' })).toBeInTheDocument();
+
+    // Slider reset and nudge buttons are named after their slider
+    expect(screen.getByRole('button', { name: /Reset Frame Size/i })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /Decrease Frame Size/i })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /Increase Frame Size/i })).toBeInTheDocument();
+
+    // Every button in the document has an accessible name
+    const nameless = screen.getAllByRole('button').filter(b => !b.textContent?.trim() && !b.getAttribute('aria-label') && !b.querySelector('img[alt]'));
+    expect(nameless).toEqual([]);
+  });
+
+  it('[REQ-UI-10] presents the export preview as a modal dialog with focus management', async () => {
+    renderApp([mockImage1]);
+
+    const exportHeader = screen.getAllByRole('button').find(btn => btn.className.includes('accordion-header') && btn.textContent?.includes('Export'))!;
+    fireEvent.click(exportHeader);
+
+    const previewBtn = screen.getByRole('button', { name: /Preview Export Quality/i });
+    previewBtn.focus();
+    await act(async () => {
+      fireEvent.click(previewBtn);
+      await new Promise(r => setTimeout(r, 50));
+    });
+
+    const dialog = await screen.findByRole('dialog', { name: /Export preview/i });
+    expect(dialog).toHaveAttribute('aria-modal', 'true');
+    expect(screen.getByRole('img', { name: /Export preview/i })).toBeInTheDocument();
+
+    // Focus moved to the Close button on open
+    const closeBtn = screen.getByRole('button', { name: /Close Preview/i });
+    const saveBtn = screen.getByRole('button', { name: /Save Image/i });
+    expect(document.activeElement).toBe(closeBtn);
+
+    // Tab from the last control wraps to the first; Shift+Tab wraps back
+    fireEvent.keyDown(document, { key: 'Tab' });
+    expect(document.activeElement).toBe(saveBtn);
+    fireEvent.keyDown(document, { key: 'Tab', shiftKey: true });
+    expect(document.activeElement).toBe(closeBtn);
+
+    // Escape closes the dialog and returns focus to the trigger
+    await act(async () => {
+      fireEvent.keyDown(document, { key: 'Escape' });
+    });
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+    expect(document.activeElement).toBe(previewBtn);
+  });
 });

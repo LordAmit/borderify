@@ -104,12 +104,21 @@ textarea {
   color: var(--text-primary);
   padding: 8px 12px;
   border-radius: var(--radius-md);
-  outline: none;
   transition: border-color 0.2s ease;
 }
 
 .input-field:focus {
   border-color: var(--accent-color);
+}
+
+/* [REQ-UI-11] Visible focus ring on every focusable control */
+:focus-visible {
+  outline: 2px solid var(--accent-color);
+  outline-offset: 2px;
+}
+
+.input-field:focus-visible {
+  outline-offset: 1px;
 }
 
 .label {
@@ -465,6 +474,9 @@ textarea {
 }
 
 .grid-dot {
+  display: block;
+  width: 100%;
+  padding: 0;
   aspect-ratio: 1;
   background: rgba(255, 255, 255, 0.05);
   border: 1px solid rgba(255, 255, 255, 0.1);
@@ -490,6 +502,7 @@ textarea {
   align-items: center;
   justify-content: space-between;
   width: 100%;
+  text-align: left;
   padding: 8px 0;
   margin-top: 12px;
   border-top: 1px solid var(--surface-border);
@@ -521,6 +534,7 @@ textarea {
   flex-direction: column;
   align-items: center;
   gap: 6px;
+  width: 100%;
   padding: 10px 4px;
   background: rgba(255, 255, 255, 0.03);
   border: 1px solid var(--surface-border);
@@ -553,12 +567,21 @@ textarea {
   color: var(--accent-color);
 }
 
+.thumbnail-select {
+  display: block;
+  height: 100%;
+  padding: 0;
+  border-radius: 4px;
+  overflow: hidden;
+  cursor: pointer;
+}
+
 .thumbnail-remove-btn {
   position: absolute;
   top: 4px;
   right: 4px;
-  width: 16px;
-  height: 16px;
+  width: 24px;
+  height: 24px;
   border-radius: 50%;
   background: var(--danger-color);
   color: white;
