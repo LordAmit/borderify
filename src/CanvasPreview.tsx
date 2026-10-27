@@ -47,14 +47,8 @@ const CanvasPreview: React.FC = () => {
   }, [activeImage, config]);
 
   return (
-    <div ref={containerRef} style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-      <canvas ref={canvasRef} style={{ 
-        maxWidth: '100%', 
-        maxHeight: '100%', 
-        objectFit: 'contain', 
-        backgroundColor: '#000',
-        boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.5), 0 10px 10px -5px rgba(0, 0, 0, 0.3)' 
-      }} />
+    <div ref={containerRef} className="canvas-stage-inner">
+      <canvas ref={canvasRef} className="preview-canvas" />
     </div>
   );
 };

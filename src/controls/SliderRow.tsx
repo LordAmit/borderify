@@ -11,25 +11,6 @@ export interface SliderRowProps {
   onReset: () => void;
 }
 
-const nudgeStyle = (atLimit: boolean): React.CSSProperties => ({
-  background: 'rgba(255, 255, 255, 0.05)',
-  border: '1px solid rgba(255, 255, 255, 0.1)',
-  borderRadius: '4px',
-  color: 'var(--text-secondary, #94a3b8)',
-  cursor: 'pointer',
-  padding: 0,
-  fontSize: '14px',
-  fontWeight: 'bold',
-  display: 'flex',
-  alignItems: 'center',
-  justifyContent: 'center',
-  userSelect: 'none',
-  opacity: atLimit ? 0.3 : 0.8,
-  minWidth: '28px',
-  height: '28px',
-  transition: 'all 0.15s ease'
-});
-
 // [REQ-UI-03] Slider paired with inline -/+ nudge buttons
 const SliderRow = ({ label, value, min, max, step, onChange, onReset }: SliderRowProps) => {
   // [REQ-UI-07] [REQ-UI-09] One generated id ties the visible label to the range input; icon buttons get names from the same label
@@ -59,7 +40,7 @@ const SliderRow = ({ label, value, min, max, step, onChange, onReset }: SliderRo
           onClick={onReset}
           title="Reset"
           aria-label={`Reset ${label}`}
-          style={{ background: 'none', border: 'none', padding: 0, cursor: 'pointer', color: '#94a3b8', display: 'flex', alignItems: 'center' }}
+          className="slider-reset"
         >
           <RotateCcw size={12} />
         </button>
@@ -69,7 +50,6 @@ const SliderRow = ({ label, value, min, max, step, onChange, onReset }: SliderRo
           type="button"
           aria-label={`Decrease ${label}`}
           onClick={() => handleNudge('prev')}
-          style={nudgeStyle(numericValue <= numericMin)}
           disabled={numericValue <= numericMin}
           title="Decrease"
           className="nudge-btn"
@@ -79,7 +59,7 @@ const SliderRow = ({ label, value, min, max, step, onChange, onReset }: SliderRo
         <input
           id={sliderId}
           type="range"
-          style={{ width: '100%', flex: 1, accentColor: 'var(--accent-color)' }}
+          className="slider-input"
           min={min}
           max={max}
           step={step}
@@ -90,7 +70,6 @@ const SliderRow = ({ label, value, min, max, step, onChange, onReset }: SliderRo
           type="button"
           aria-label={`Increase ${label}`}
           onClick={() => handleNudge('next')}
-          style={nudgeStyle(numericValue >= numericMax)}
           disabled={numericValue >= numericMax}
           title="Increase"
           className="nudge-btn"

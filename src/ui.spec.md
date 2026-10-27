@@ -19,6 +19,8 @@ This document contains the functional requirements for layouts, settings control
 *   **[REQ-UI-10]** While the export preview overlay is open, the system shall present it as a modal dialog that receives keyboard focus, keeps Tab focus inside it, closes on Escape, and returns focus to the control that opened it.
 *   **[REQ-UI-11]** The system shall expose the expanded or collapsed state of each collapsible settings section through `aria-expanded` and show a visible focus ring on every focusable control.
 
+*   **[REQ-UI-17]** The system shall render all interface text at a contrast ratio of at least 4.5:1 against its background, and shall define every color, radius and type size as a design token in the stylesheet `:root` block rather than as a literal value in component markup or component rules.
+
 ### State-Driven Requirements
 *   **[REQ-UI-14]** While a batch export is running, the system shall show the progress as "Exporting N of M" in a live region, label the batch button with it, and disable the export and preview buttons until the ZIP download starts.
 *   **[REQ-UI-15]** While files are dragged over the application, the system shall highlight the canvas area as the drop target and show a "Drop photos to add them" hint.

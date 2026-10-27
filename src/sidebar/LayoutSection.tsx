@@ -72,7 +72,7 @@ const LayoutSection = () => {
         <ColorField
           id="layout-background-color"
           label="Background"
-          height={40}
+          size="lg"
           value={config.layout.backgroundColor}
           onChange={(backgroundColor) => setLayout({ backgroundColor })}
         />
@@ -97,7 +97,7 @@ const LayoutSection = () => {
         </>
       )}
 
-      <div style={{ marginTop: '16px', paddingTop: '16px', borderTop: '1px solid #334155' }}>
+      <div className="control-divider">
         <SliderRow
           label={`Frame Size: ${(config.layout.borderWidthScale * 100).toFixed(0)}%`}
           value={config.layout.borderWidthScale}

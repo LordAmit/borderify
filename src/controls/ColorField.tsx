@@ -3,17 +3,16 @@ export interface ColorFieldProps {
   label: string;
   value: string;
   onChange: (value: string) => void;
-  height?: number;
+  size?: 'md' | 'lg';
 }
 
-const ColorField = ({ id, label, value, onChange, height = 36 }: ColorFieldProps) => (
+const ColorField = ({ id, label, value, onChange, size = 'md' }: ColorFieldProps) => (
   <div className="control-group">
     <label className="label" htmlFor={id}>{label}</label>
     <input
       id={id}
       type="color"
-      className="input-field"
-      style={{ height: `${height}px`, padding: '2px' }}
+      className={`input-field color-input${size === 'lg' ? ' color-input-lg' : ''}`}
       value={value}
       onChange={(e) => onChange(e.target.value)}
     />

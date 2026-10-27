@@ -13,7 +13,7 @@ export interface AccordionSectionProps {
 const AccordionSection = ({ id, title, icon, open, onToggle, children }: AccordionSectionProps) => (
   <div className="accordion-item">
     <button className="accordion-header" type="button" aria-expanded={open} aria-controls={`section-${id}`} onClick={onToggle}>
-      <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+      <div className="accordion-title">
         {icon} {title}
       </div>
       <span aria-hidden="true">{open ? '▲' : '▼'}</span>

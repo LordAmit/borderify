@@ -65,7 +65,7 @@ const SidebarControls: React.FC<SidebarControlsProps> = ({
   return (
     <div className="sidebar">
       <div className="sidebar-content">
-        <span className="label" id="styles-label" style={{ marginBottom: '8px' }}>Styles</span>
+        <span className="label styles-label" id="styles-label">Styles</span>
         <StyleGallery config={state.config} updateConfig={updateConfig} />
 
         {sections.map((s) => (

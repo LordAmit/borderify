@@ -12,9 +12,9 @@ export interface PositionFieldProps {
 const PositionField = ({ label, groupLabel, value, onChange }: PositionFieldProps) => (
   <div className="control-group">
     <span className="label">{label}</span>
-    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+    <div className="position-row">
       <GridPositionSelector label={groupLabel ?? label} value={value} onChange={onChange} />
-      <div style={{ fontSize: '10px', color: 'var(--text-secondary)' }}>{value}</div>
+      <div className="position-readout">{value}</div>
     </div>
   </div>
 );

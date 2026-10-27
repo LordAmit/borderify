@@ -13,18 +13,6 @@ type CaptionStyle = Partial<Omit<TextLabel, 'id' | 'text' | 'show'>>;
 
 const CAPTION_TAGS = ['{make}', '{model}', '{iso}', '{shutter}', '{f}', '{focal}', '{lens}', '{date}'];
 
-const applyAllBoxStyle: React.CSSProperties = {
-  display: 'flex',
-  alignItems: 'center',
-  gap: '8px',
-  padding: '8px 12px',
-  background: 'rgba(255, 255, 255, 0.02)',
-  borderRadius: '8px',
-  border: '1px solid rgba(255, 255, 255, 0.05)'
-};
-const applyAllCheckboxStyle: React.CSSProperties = { width: '15px', height: '15px', accentColor: '#38bdf8', cursor: 'pointer' };
-const applyAllLabelStyle: React.CSSProperties = { fontSize: '12px', color: 'var(--text-secondary)', cursor: 'pointer', userSelect: 'none' };
-
 export interface CaptionSectionProps {
   hasMultipleImages?: boolean;
 }
@@ -125,29 +113,28 @@ const CaptionSection = ({ hasMultipleImages }: CaptionSectionProps) => {
         <label className="label" htmlFor="caption-text">Caption Text</label>
         <textarea
           id="caption-text"
-          className="input-field"
+          className="input-field textarea-resizable"
           rows={2}
-          style={{ resize: 'vertical' }}
           value={currentCaption}
           onChange={(e) => handleCaptionChange(e.target.value)}
           placeholder="Enter caption for this photo..."
         />
         <TagBar value={currentCaption} onChange={handleCaptionChange} tags={CAPTION_TAGS} />
 
-        <div style={{ fontSize: '11px', color: 'var(--text-secondary)', marginTop: '6px', lineHeight: '1.4' }}>
+        <div className="hint-text">
           Tip: You can format text as <code>**bold**</code> and <code>*italic*</code>
         </div>
 
         {hasMultipleImages && (
-          <div style={{ ...applyAllBoxStyle, marginTop: '12px' }}>
+          <div className="apply-all-box apply-all-box-below">
             <input
               type="checkbox"
               id="apply-caption-all"
               checked={applyCaptionToAll}
               onChange={(e) => handleToggleApplyAll(e.target.checked)}
-              style={applyAllCheckboxStyle}
+              className="apply-all-checkbox"
             />
-            <label htmlFor="apply-caption-all" style={applyAllLabelStyle}>
+            <label htmlFor="apply-caption-all" className="apply-all-label">
               Apply same caption to all {state.images.length} photos in batch
             </label>
           </div>
@@ -155,15 +142,15 @@ const CaptionSection = ({ hasMultipleImages }: CaptionSectionProps) => {
       </div>
 
       {hasMultipleImages && (
-        <div style={{ ...applyAllBoxStyle, marginBottom: '16px' }}>
+        <div className="apply-all-box apply-all-box-above">
           <input
             type="checkbox"
             id="apply-style-all"
             checked={applyStyleToAll}
             onChange={(e) => handleToggleApplyStyleAll(e.target.checked)}
-            style={applyAllCheckboxStyle}
+            className="apply-all-checkbox"
           />
-          <label htmlFor="apply-style-all" style={applyAllLabelStyle}>
+          <label htmlFor="apply-style-all" className="apply-all-label">
             Apply same styling to all {state.images.length} photos in batch
           </label>
         </div>
@@ -171,7 +158,7 @@ const CaptionSection = ({ hasMultipleImages }: CaptionSectionProps) => {
 
       <div className="control-group">
         <label className="label" htmlFor="caption-font">Font</label>
-        <div style={{ display: 'flex', gap: '8px' }}>
+        <div className="font-row">
           <input
             id="caption-font"
             type="text"
@@ -184,16 +171,15 @@ const CaptionSection = ({ hasMultipleImages }: CaptionSectionProps) => {
             accept=".ttf,.otf,.woff,.woff2"
             id="font-upload"
             aria-label="Upload font file"
-            style={{ display: 'none' }}
+            hidden
             onChange={handleFontUpload}
           />
           <button
             type="button"
-            className="btn btn-outline"
+            className="btn btn-outline icon-btn-sm"
             onClick={() => document.getElementById('font-upload')?.click()}
             title="Upload Font"
             aria-label="Upload font file"
-            style={{ padding: '8px', minWidth: '40px' }}
           >
             +
           </button>
@@ -201,8 +187,7 @@ const CaptionSection = ({ hasMultipleImages }: CaptionSectionProps) => {
             type="button"
             aria-label="Bold"
             aria-pressed={isBold}
-            className={`btn btn-outline ${isBold ? 'active' : ''}`}
-            style={{ padding: '0 12px', minWidth: '40px', borderColor: isBold ? 'var(--accent-color)' : '' }}
+            className={`btn btn-outline icon-btn-sm ${isBold ? 'active' : ''}`}
             onClick={() => handleStyleChange({ fontWeight: isBold ? 'normal' : 'bold' })}
           >
             <Bold size={16} />
@@ -211,14 +196,13 @@ const CaptionSection = ({ hasMultipleImages }: CaptionSectionProps) => {
             type="button"
             aria-label="Italic"
             aria-pressed={isItalic}
-            className={`btn btn-outline ${isItalic ? 'active' : ''}`}
-            style={{ padding: '0 12px', minWidth: '40px', borderColor: isItalic ? 'var(--accent-color)' : '' }}
+            className={`btn btn-outline icon-btn-sm ${isItalic ? 'active' : ''}`}
             onClick={() => handleStyleChange({ fontStyle: isItalic ? 'normal' : 'italic' })}
           >
             <Italic size={16} />
           </button>
         </div>
-        <small style={{ display: 'block', marginTop: '4px', color: '#94a3b8', fontSize: '11px' }}>Alternatively, upload a .ttf/.otf file</small>
+        <small className="hint-text">Alternatively, upload a .ttf/.otf file</small>
       </div>
 
       <SliderRow

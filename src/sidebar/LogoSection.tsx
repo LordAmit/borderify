@@ -34,7 +34,7 @@ const LogoSection = () => {
       {config.logo.dataUrl && (
         <>
           <div className="control-group">
-            <button type="button" className="btn btn-outline" style={{ width: '100%' }} onClick={() => setLogo({ dataUrl: null })}>
+            <button type="button" className="btn btn-outline btn-block" onClick={() => setLogo({ dataUrl: null })}>
               Clear Logo
             </button>
           </div>

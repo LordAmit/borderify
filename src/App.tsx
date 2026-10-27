@@ -358,14 +358,14 @@ function App() {
       <div className="workspace">
         <header className="top-bar">
           <div className="brand">
-            <img src="./favicon.svg" alt="Borderify Logo" className="logo-icon" style={{ width: 32, height: 32 }} />
+            <img src="./favicon.svg" alt="Borderify Logo" className="logo-icon" />
             <div className="brand-text">
               <h1 className="brand-name">Borderify</h1>
               <span className="byline">
                 <span className="byline-credit">Made with ❤️ by <a href="https://github.com/lordamit" target="_blank" rel="noopener noreferrer">Amit Seal Ami</a></span>
                 <span className="byline-dot">•</span>
                 <a href="https://github.com/lordamit/borderify" target="_blank" rel="noopener noreferrer" className="byline-link">
-                  <svg viewBox="0 0 24 24" width="11" height="11" stroke="currentColor" strokeWidth="2.5" fill="none" strokeLinecap="round" strokeLinejoin="round" style={{ verticalAlign: 'middle', marginRight: '3px' }}>
+                  <svg viewBox="0 0 24 24" width="11" height="11" stroke="currentColor" strokeWidth="2.5" fill="none" strokeLinecap="round" strokeLinejoin="round" className="byline-icon" aria-hidden="true">
                     <path d="M9 19c-5 1.5-5-2.5-7-3m14 6v-3.87a3.37 3.37 0 0 0-.94-2.61c3.14-.35 6.44-1.54 6.44-7A5.44 5.44 0 0 0 20 4.77 5.07 5.07 0 0 0 19.91 1S18.73.65 16 2.48a13.38 13.38 0 0 0-7 0C6.27.65 5.09 1 5.09 1A5.07 5.07 0 0 0 5 4.77a5.44 5.44 0 0 0-1.5 3.78c0 5.42 3.3 6.61 6.44 7A3.37 3.37 0 0 0 9 18.13V22"></path>
                   </svg>
                   GitHub
@@ -379,14 +379,14 @@ function App() {
               multiple
               accept="image/*"
               ref={fileInputRef}
-              style={{ display: 'none' }}
+              hidden
               onChange={handleFileUpload}
             />
             <input
               type="file"
               accept=".json"
               ref={importPresetRef}
-              style={{ display: 'none' }}
+              hidden
               onChange={loadPresetJSON}
             />
             <div className="action-group">
@@ -412,14 +412,13 @@ function App() {
             </div>
           )}
           {state.images.length === 0 ? (
-            <div className="empty-state glass-panel" style={{ padding: '40px', borderRadius: '16px' }}>
-              <img src="./favicon.svg" alt="Borderify Empty State" style={{ width: 100, height: 100 }} />
-              <h2 style={{ marginBottom: '8px' }}>No Photos Loaded</h2>
-              <p style={{ maxWidth: '300px', fontSize: '14px' }}>Start framing your photos by dropping them here.</p>
+            <div className="empty-state glass-panel">
+              <img src="./favicon.svg" alt="Borderify Empty State" className="empty-state-icon" />
+              <h2 className="empty-state-title">No Photos Loaded</h2>
+              <p className="empty-state-text">Start framing your photos by dropping them here.</p>
               <button
                 type="button"
-                className="btn btn-primary"
-                style={{ marginTop: '20px' }}
+                className="btn btn-primary empty-state-action"
                 onClick={() => fileInputRef.current?.click()}
               >
                 <ImagePlus size={18} />
@@ -427,43 +426,23 @@ function App() {
               </button>
             </div>
           ) : (
-            <div style={{ display: 'flex', flexDirection: 'column', height: '100%', width: '100%', overflow: 'hidden' }}>
-              <div style={{ flex: 1, minHeight: 0 }}>
+            <div className="canvas-stack">
+              <div className="canvas-stage">
                 <CanvasPreview />
               </div>
               {/* [REQ-UI-05] Image queue: thumbnails with select and delete controls */}
               {state.images.length > 1 && (
-                <div style={{
-                  height: '80px',
-                  flexShrink: 0,
-                  display: 'flex',
-                  gap: '8px',
-                  padding: '8px',
-                  overflowX: 'auto',
-                  background: 'var(--surface-color)',
-                  borderTop: '1px solid var(--surface-border)'
-                }}>
+                <div className="thumbnail-strip">
                   {state.images.map(img => (
-                    <div
-                      key={img.id}
-                      style={{
-                        position: 'relative',
-                        height: '100%',
-                        flexShrink: 0
-                      }}
-                    >
+                    <div key={img.id} className="thumbnail-item">
                       {/* [REQ-UI-08] [REQ-UI-09] Thumbnail is a pressable button named by the image alt text */}
                       <button
                         type="button"
                         className="thumbnail-select"
                         aria-pressed={state.activeImageId === img.id}
                         onClick={() => setActiveImage(img.id)}
-                        style={{
-                          opacity: state.activeImageId === img.id ? 1 : 0.5,
-                          border: state.activeImageId === img.id ? '2px solid var(--accent-color)' : '2px solid transparent',
-                        }}
                       >
-                        <img src={img.objectUrl} alt={img.file.name} style={{ height: '100%', objectFit: 'cover', width: 'auto' }} />
+                        <img src={img.objectUrl} alt={img.file.name} className="thumbnail-img" />
                       </button>
                       <button
                         type="button"
@@ -502,32 +481,17 @@ function App() {
           role="dialog"
           aria-modal="true"
           aria-label="Export preview"
-          style={{
-          position: 'fixed',
-          top: 0, left: 0, right: 0, bottom: 0,
-          backgroundColor: 'rgba(0,0,0,0.85)',
-          display: 'flex',
-          flexDirection: 'column',
-          alignItems: 'center',
-          justifyContent: 'center',
-          zIndex: 9999,
-          padding: '20px'
-        }}>
-          <div style={{
-            position: 'absolute',
-            top: '20px',
-            right: '20px',
-            display: 'flex',
-            gap: '12px'
-          }}>
+          className="preview-overlay"
+        >
+          <div className="preview-actions">
             <button type="button" className="btn btn-primary" onClick={handleExportSingle}>
               <Download size={16} /> Save Image
             </button>
-            <button type="button" ref={previewCloseRef} className="btn btn-outline" onClick={() => setPreviewUrl(null)} style={{ background: 'var(--surface-color)' }}>
+            <button type="button" ref={previewCloseRef} className="btn btn-outline preview-close" onClick={() => setPreviewUrl(null)}>
               <X size={16} /> Close Preview
             </button>
           </div>
-          <img src={previewUrl} alt="Export preview of the current image at export quality" style={{ maxWidth: '100%', maxHeight: '100%', objectFit: 'contain', boxShadow: '0 10px 30px rgba(0,0,0,0.5)' }} />
+          <img src={previewUrl} alt="Export preview of the current image at export quality" className="preview-image" />
         </div>
       )}
     </div>

@@ -34,7 +34,7 @@ const ExifSection = () => {
       {activeImage && !hasExif && (
         <ExifWarning>No EXIF data detected in this photo. Dynamic EXIF pills cannot be shown.</ExifWarning>
       )}
-      <label className="label" style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '16px', cursor: 'pointer' }}>
+      <label className="label checkbox-label">
         <input
           type="checkbox"
           checked={config.exifPills.show}
@@ -69,7 +69,7 @@ const ExifSection = () => {
           <div className="control-group">
             <span className="label">Displayed Data</span>
             {/* [REQ-UI-08] Displayed-data chips are toggle buttons */}
-            <div className="chip-group" role="group" aria-label="Displayed Data" style={{ display: 'flex', flexWrap: 'wrap', gap: '6px', marginTop: '4px' }}>
+            <div className="chip-group chip-group-pills" role="group" aria-label="Displayed Data">
               {DISPLAYED_DATA.map((item) => {
                 const isActive = config.exifPills[item.key];
                 return (
@@ -77,20 +77,7 @@ const ExifSection = () => {
                     key={item.key}
                     type="button"
                     aria-pressed={isActive}
-                    className={`chip ${isActive ? 'active' : ''}`}
-                    style={{
-                      fontSize: '11px',
-                      padding: '4px 10px',
-                      borderRadius: '20px',
-                      cursor: 'pointer',
-                      background: isActive ? 'rgba(56, 189, 248, 0.2)' : 'rgba(255,255,255,0.05)',
-                      border: isActive ? '1px solid rgba(56, 189, 248, 0.4)' : '1px solid rgba(255,255,255,0.1)',
-                      color: isActive ? '#38bdf8' : '#94a3b8',
-                      transition: 'all 0.2s ease',
-                      display: 'inline-flex',
-                      alignItems: 'center',
-                      userSelect: 'none'
-                    }}
+                    className={`chip chip-pill ${isActive ? 'active' : ''}`}
                     onClick={() => setPills({ [item.key]: !isActive })}
                   >
                     {isActive ? '✓ ' : '+ '}{item.label}

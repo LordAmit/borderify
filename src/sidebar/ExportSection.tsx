@@ -69,7 +69,7 @@ const ExportSection = ({ onPreviewExport, isPreviewLoading, onExportSingle, onEx
           <option value="Instagram">Instagram (Max 1350px)</option>
         </select>
         {projectedDimensions && (
-          <div style={{ fontSize: '11px', color: 'var(--text-secondary)', marginTop: '4px', textAlign: 'right' }}>
+          <div className="hint-text hint-text-right">
             Output: {projectedDimensions.w} × {projectedDimensions.h} px
           </div>
         )}
@@ -86,8 +86,7 @@ const ExportSection = ({ onPreviewExport, isPreviewLoading, onExportSingle, onEx
       {onPreviewExport && (
         <button
           type="button"
-          className="btn btn-outline"
-          style={{ width: '100%', marginTop: '16px', justifyContent: 'center' }}
+          className="btn btn-outline btn-block export-preview-btn"
           onClick={onPreviewExport}
           disabled={isPreviewLoading || exporting}
         >
@@ -97,12 +96,12 @@ const ExportSection = ({ onPreviewExport, isPreviewLoading, onExportSingle, onEx
       )}
 
       {hasImages && (
-        <div style={{ marginTop: '16px', borderTop: '1px solid var(--surface-border)', paddingTop: '16px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
-          <button type="button" className="btn btn-primary" style={{ width: '100%', justifyContent: 'center' }} onClick={onExportSingle} disabled={exporting}>
+        <div className="export-actions">
+          <button type="button" className="btn btn-primary btn-block" onClick={onExportSingle} disabled={exporting}>
             <Download size={16} /> Save Current Image
           </button>
           {hasMultipleImages && (
-            <button type="button" className="btn btn-outline" style={{ width: '100%', justifyContent: 'center' }} onClick={onExportBatch} disabled={exporting} aria-busy={exporting}>
+            <button type="button" className="btn btn-outline btn-block" onClick={onExportBatch} disabled={exporting} aria-busy={exporting}>
               <Archive size={16} /> {exporting ? `${progressText}…` : 'Save All (ZIP)'}
             </button>
           )}
