@@ -9,9 +9,14 @@ import { fileURLToPath } from 'url';
 const srcDir = path.dirname(fileURLToPath(import.meta.url));
 const projectRoot = path.resolve(srcDir, '..');
 const read = (rel: string) => fs.readFileSync(path.join(projectRoot, rel), 'utf-8');
-const implFiles = fs
-  .readdirSync(srcDir)
-  .filter((f) => /\.tsx?$/.test(f) && !/\.test\.tsx?$/.test(f) && !f.endsWith('.d.ts'));
+// Every implementation module under src/, including the sidebar/ and controls/ subfolders, as a path relative to src/.
+const listImplFiles = (dir: string, prefix = ''): string[] =>
+  fs.readdirSync(dir, { withFileTypes: true }).flatMap((entry) => {
+    if (entry.isDirectory()) return listImplFiles(path.join(dir, entry.name), `${prefix}${entry.name}/`);
+    const f = entry.name;
+    return /\.tsx?$/.test(f) && !/\.test\.tsx?$/.test(f) && !f.endsWith('.d.ts') ? [`${prefix}${f}`] : [];
+  });
+const implFiles = listImplFiles(srcDir);
 // Remove block comments and full-line // comments so tags and notes cannot trip the checks.
 const stripComments = (s: string) => s.replace(/\/\*[\s\S]*?\*\//g, '').replace(/^\s*\/\/.*$/gm, '');
 
@@ -66,6 +71,13 @@ describe('Architectural principles (constitution §2)', () => {
     expect(read('src/store.tsx')).toMatch(/createContext</);
     for (const c of ['App.tsx', 'CanvasPreview.tsx', 'SidebarControls.tsx']) {
       expect(read(`src/${c}`), `${c} must read state via useStore`).toMatch(/import \{[^}]*\buseStore\b[^}]*\} from '\.\/store'/);
+    }
+    // Sidebar sections read the same store; none may hold config or image state of its own.
+    for (const f of implFiles.filter((f) => f.startsWith('sidebar/'))) {
+      const src = stripComments(read(`src/${f}`));
+      if (/\buseStore\(/.test(src)) {
+        expect(src, `${f} must import useStore from ../store`).toMatch(/import \{[^}]*\buseStore\b[^}]*\} from '\.\.\/store'/);
+      }
     }
   });
 });

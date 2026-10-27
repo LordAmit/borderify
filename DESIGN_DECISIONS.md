@@ -49,7 +49,7 @@ Numbered records of the core technical decisions, their trade-offs, and the requ
 | **Status** | Accepted |
 | **Date** | 2026-05-08 |
 | **Requirements** | [REQ-UI-03](src/ui.spec.md), [REQ-STAT-03](src/store.spec.md) |
-| **Code** | [SidebarControls.tsx](src/SidebarControls.tsx) (`SliderRow`) |
+| **Code** | [controls/SliderRow.tsx](src/controls/SliderRow.tsx), used by every section in [sidebar/](src/sidebar/) |
 
 **Decision:** Slider settings were refactored from repeated JSX blocks into one abstracted React component (`SliderRow`).
 

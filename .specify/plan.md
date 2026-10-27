@@ -6,7 +6,7 @@ This document describes the architectural layout and component responsibilities 
 
 ```mermaid
 graph TD
-    UI[App.tsx / SidebarControls.tsx] --> |Dispatches actions| Store[store.tsx Context]
+    UI[App.tsx / SidebarControls.tsx + sidebar/*] --> |Dispatches actions| Store[store.tsx Context]
     Store --> |Provides Active Config| Preview[CanvasPreview.tsx]
     Preview --> |Triggers| Render[render.ts Pipeline]
     Images[Image Files] --> |Extracted by| EXIF[exif.ts Reader/Writer]

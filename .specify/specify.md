@@ -8,7 +8,7 @@ The EARS requirements for Borderify are not kept in this file. They live in `*.s
 | Exporting and saving | [export.spec.md](../src/export.spec.md) | `REQ-EXPT-*` | [utils.ts](../src/utils.ts) |
 | Canvas rendering and layout | [render.spec.md](../src/render.spec.md) | `REQ-REND-*` | [render.ts](../src/render.ts) |
 | Presets and state management | [store.spec.md](../src/store.spec.md) | `REQ-STAT-*` | [store.tsx](../src/store.tsx) |
-| User interface | [ui.spec.md](../src/ui.spec.md) | `REQ-UI-*` | [App.tsx](../src/App.tsx), [SidebarControls.tsx](../src/SidebarControls.tsx) |
+| User interface | [ui.spec.md](../src/ui.spec.md) | `REQ-UI-*` | [App.tsx](../src/App.tsx), [SidebarControls.tsx](../src/SidebarControls.tsx), [sidebar/](../src/sidebar/) (one file per section), [controls/](../src/controls/) (shared inputs) |
 | Architectural principles (system-level) | [constitution.md §2](memory/constitution.md) | `ARC-*` | [render.ts](../src/render.ts), [exif.ts](../src/exif.ts), [App.tsx](../src/App.tsx), [store.tsx](../src/store.tsx); guarded by [architecture.test.ts](../src/architecture.test.ts) |
 
 ## Conventions

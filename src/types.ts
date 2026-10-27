@@ -1,3 +1,5 @@
+export type Position = "Top Left" | "Top Center" | "Top Right" | "Middle Left" | "Center" | "Middle Right" | "Bottom Left" | "Bottom Center" | "Bottom Right";
+
 export interface ExifData {
   make?: string;
   model?: string;
@@ -51,7 +53,7 @@ export interface TextLabel {
   color: string;
   strokeColor: string;
   strokeWidthScale: number;
-  position: "Top Left" | "Top Center" | "Top Right" | "Middle Left" | "Center" | "Middle Right" | "Bottom Left" | "Bottom Center" | "Bottom Right";
+  position: Position;
   positionXScale: number;
   positionYScale: number;
 
@@ -63,7 +65,7 @@ export interface TextLabel {
 export interface LogoSettings {
   dataUrl: string | null; 
   sizeScale: number;
-  position: "Top Left" | "Top Center" | "Top Right" | "Middle Left" | "Center" | "Middle Right" | "Bottom Left" | "Bottom Center" | "Bottom Right";
+  position: Position;
 
   offsetXScale: number;
   offsetYScale: number;
@@ -78,7 +80,7 @@ export interface ExifPillSettings {
   showLens: boolean;
   showCamera: boolean;
   showDate: boolean;
-  position: "Top Left" | "Top Center" | "Top Right" | "Middle Left" | "Center" | "Middle Right" | "Bottom Left" | "Bottom Center" | "Bottom Right";
+  position: Position;
   positionXScale: number; 
   positionYScale: number; 
   boxColor: string;
