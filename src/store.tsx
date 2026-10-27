@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useState, useCallback } from 'react';
 import type { ReactNode } from 'react';
-import type { AppState, AppConfig, ImageItem, TextLabel } from './types';
+import type { AppState, AppConfig, ImageItem, TextLabel, Notice, ExportProgress } from './types';
 
 // [REQ-STAT-01] Single configuration object holding layout, labels, logo, pills, and export settings
 export const defaultConfig: AppConfig = {
@@ -91,6 +91,8 @@ interface StoreContextType {
   updateImageCaption: (id: string, text: string) => void;
   updateImageCaptionStyle: (id: string, style: Partial<Omit<TextLabel, 'id' | 'text' | 'show'>>) => void;
   clearAllImageCaptionStyles: () => void;
+  setNotice: (notice: Notice | null) => void;
+  setExportProgress: (progress: ExportProgress | null) => void;
 }
 
 const StoreContext = createContext<StoreContextType | undefined>(undefined);
@@ -101,6 +103,8 @@ export const StoreProvider: React.FC<{ children: ReactNode }> = ({ children }) =
     images: [],
     activeImageId: null,
     config: defaultConfig,
+    notice: null,
+    exportProgress: null,
   });
 
   // [REQ-STAT-02] Whole-config replacement; preset loading passes a replacer here
@@ -170,6 +174,13 @@ export const StoreProvider: React.FC<{ children: ReactNode }> = ({ children }) =
     }));
   };
 
+  const setNotice = useCallback((notice: Notice | null) => {
+    setState(prev => ({ ...prev, notice }));
+  }, []);
+  const setExportProgress = useCallback((exportProgress: ExportProgress | null) => {
+    setState(prev => ({ ...prev, exportProgress }));
+  }, []);
+
   return (
     <StoreContext.Provider value={{
       state,
@@ -181,7 +192,9 @@ export const StoreProvider: React.FC<{ children: ReactNode }> = ({ children }) =
       clearAllImages,
       updateImageCaption,
       updateImageCaptionStyle,
-      clearAllImageCaptionStyles
+      clearAllImageCaptionStyles,
+      setNotice,
+      setExportProgress
     }}>
       {children}
     </StoreContext.Provider>

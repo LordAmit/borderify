@@ -19,5 +19,11 @@ This document contains the functional requirements for layouts, settings control
 *   **[REQ-UI-10]** While the export preview overlay is open, the system shall present it as a modal dialog that receives keyboard focus, keeps Tab focus inside it, closes on Escape, and returns focus to the control that opened it.
 *   **[REQ-UI-11]** The system shall expose the expanded or collapsed state of each collapsible settings section through `aria-expanded` and show a visible focus ring on every focusable control.
 
+### State-Driven Requirements
+*   **[REQ-UI-14]** While a batch export is running, the system shall show the progress as "Exporting N of M" in a live region, label the batch button with it, and disable the export and preview buttons until the ZIP download starts.
+*   **[REQ-UI-15]** While files are dragged over the application, the system shall highlight the canvas area as the drop target and show a "Drop photos to add them" hint.
+
 ### Unwanted Behavior
+*   **[REQ-UI-12]** If a selected preset file cannot be parsed as a configuration object (invalid JSON, or no layout and labels fields), then the system shall show a dismissible error notice naming the file and keep the current configuration unchanged.
+*   **[REQ-UI-13]** If one or more selected, dropped, or pasted files cannot be read as images, then the system shall show a dismissible notice with the count of skipped files and still load the remaining files.
 *   **[REQ-UI-16]** If a web font family name is still being typed, then the system shall request the font stylesheet only after 500 ms without further input and shall remove stylesheet links for names that were superseded before that delay elapsed.

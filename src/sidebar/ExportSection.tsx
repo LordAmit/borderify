@@ -26,6 +26,10 @@ const ExportSection = ({ onPreviewExport, isPreviewLoading, onExportSingle, onEx
   const { state, updateConfig } = useStore();
   const { activeImage } = useActiveImage();
   const config = state.config;
+  // [REQ-UI-14] A running batch export locks the export buttons and reports progress
+  const progress = state.exportProgress;
+  const exporting = progress !== null;
+  const progressText = progress ? `Exporting ${progress.done} of ${progress.total}` : '';
 
   const setExport = (patch: Partial<ExportSettings>) =>
     updateConfig((c) => ({ ...c, export: { ...c.export, ...patch } }));
@@ -85,7 +89,7 @@ const ExportSection = ({ onPreviewExport, isPreviewLoading, onExportSingle, onEx
           className="btn btn-outline"
           style={{ width: '100%', marginTop: '16px', justifyContent: 'center' }}
           onClick={onPreviewExport}
-          disabled={isPreviewLoading}
+          disabled={isPreviewLoading || exporting}
         >
           <Image size={16} />
           {isPreviewLoading ? 'Generating...' : 'Preview Export Quality'}
@@ -94,13 +98,19 @@ const ExportSection = ({ onPreviewExport, isPreviewLoading, onExportSingle, onEx
 
       {hasImages && (
         <div style={{ marginTop: '16px', borderTop: '1px solid var(--surface-border)', paddingTop: '16px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
-          <button type="button" className="btn btn-primary" style={{ width: '100%', justifyContent: 'center' }} onClick={onExportSingle}>
+          <button type="button" className="btn btn-primary" style={{ width: '100%', justifyContent: 'center' }} onClick={onExportSingle} disabled={exporting}>
             <Download size={16} /> Save Current Image
           </button>
           {hasMultipleImages && (
-            <button type="button" className="btn btn-outline" style={{ width: '100%', justifyContent: 'center' }} onClick={onExportBatch}>
-              <Archive size={16} /> Save All (ZIP)
+            <button type="button" className="btn btn-outline" style={{ width: '100%', justifyContent: 'center' }} onClick={onExportBatch} disabled={exporting} aria-busy={exporting}>
+              <Archive size={16} /> {exporting ? `${progressText}…` : 'Save All (ZIP)'}
             </button>
+          )}
+          {exporting && (
+            <div className="export-progress" role="status" aria-live="polite">
+              <div className="export-progress-bar" style={{ width: `${Math.round((progress.done / progress.total) * 100)}%` }} />
+              <span>{progressText}</span>
+            </div>
           )}
         </div>
       )}

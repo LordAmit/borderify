@@ -1,5 +1,5 @@
 import { describe, it, expect, vi } from 'vitest';
-import { render, screen, fireEvent, act } from '@testing-library/react';
+import { render, screen, fireEvent, act, waitFor } from '@testing-library/react';
 import React from 'react';
 import '@testing-library/jest-dom';
 import App from './App';
@@ -426,5 +426,105 @@ describe('App Layout and UI components', () => {
     } finally {
       vi.useRealTimers();
     }
+  });
+
+  it('[REQ-UI-12] shows a dismissible error and keeps settings when a preset file is not a configuration', async () => {
+    const originalReadAsText = FileReader.prototype.readAsText;
+    let payload = 'not json {';
+    FileReader.prototype.readAsText = function(this: FileReader) {
+      this.onload?.({ target: { result: payload } } as any);
+    };
+    try {
+      renderApp();
+      const loadPresetInput = document.querySelector('input[accept=".json"]') as HTMLInputElement;
+      const ratioBefore = screen.getByRole('button', { name: 'ORIG' }).getAttribute('aria-pressed');
+
+      // Invalid JSON
+      fireEvent.change(loadPresetInput, { target: { files: [new File(['x'], 'bad.json', { type: 'application/json' })] } });
+      const alert = await screen.findByRole('alert');
+      expect(alert).toHaveTextContent('bad.json');
+      expect(screen.getByRole('button', { name: 'ORIG' })).toHaveAttribute('aria-pressed', ratioBefore!);
+
+      fireEvent.click(screen.getByRole('button', { name: 'Dismiss notice' }));
+      expect(screen.queryByRole('alert')).not.toBeInTheDocument();
+
+      // Valid JSON that is not a configuration object
+      payload = JSON.stringify({ hello: 'world' });
+      fireEvent.change(loadPresetInput, { target: { files: [new File(['x'], 'notes.json', { type: 'application/json' })] } });
+      expect(await screen.findByRole('alert')).toHaveTextContent('notes.json');
+    } finally {
+      FileReader.prototype.readAsText = originalReadAsText;
+    }
+  });
+
+  it('[REQ-UI-13] reports skipped non-image files and still loads the rest', async () => {
+    const originalReadAsDataURL = FileReader.prototype.readAsDataURL;
+    FileReader.prototype.readAsDataURL = function(this: FileReader) {
+      this.onload?.({ target: { result: 'data:image/jpeg;base64,mock-base64' } } as any);
+    };
+    try {
+      renderApp();
+      const fileInput = document.querySelector('input[accept="image/*"]') as HTMLInputElement;
+      const notes = new File(['hello'], 'notes.txt', { type: 'text/plain' });
+      const photo = new File(['image-binary'], 'photo.jpg', { type: 'image/jpeg' });
+
+      await act(async () => {
+        fireEvent.change(fileInput, { target: { files: [notes, photo] } });
+        await new Promise(resolve => setTimeout(resolve, 50));
+      });
+
+      const status = await screen.findByRole('status');
+      expect(status).toHaveTextContent('Skipped 1 file');
+      expect(screen.queryByText(/No Photos Loaded/i)).not.toBeInTheDocument();
+    } finally {
+      FileReader.prototype.readAsDataURL = originalReadAsDataURL;
+    }
+  });
+
+  it('[REQ-UI-14] shows batch export progress and disables export buttons while the ZIP builds', async () => {
+    const originalClick = HTMLAnchorElement.prototype.click;
+    HTMLAnchorElement.prototype.click = vi.fn();
+    try {
+      renderApp([mockImage1, mockImage2]);
+      const exportHeader = screen.getAllByRole('button').find(btn => btn.className.includes('accordion-header') && btn.textContent?.includes('Export'))!;
+      fireEvent.click(exportHeader);
+
+      const batchBtn = screen.getByRole('button', { name: /Save All \(ZIP\)/i });
+      await act(async () => {
+        fireEvent.click(batchBtn);
+      });
+
+      // Mid-export: progress is announced and the buttons are locked
+      expect(screen.getByRole('status')).toHaveTextContent('Exporting 1 of 2');
+      expect(screen.getByRole('button', { name: /Exporting 1 of 2/i })).toBeDisabled();
+      expect(screen.getByRole('button', { name: /Save Current Image/i })).toBeDisabled();
+      expect(screen.getByRole('button', { name: /Preview Export Quality/i })).toBeDisabled();
+
+      // After the download starts, the controls unlock
+      await waitFor(() => expect(screen.queryByRole('status')).not.toBeInTheDocument());
+      expect(screen.getByRole('button', { name: /Save All \(ZIP\)/i })).toBeEnabled();
+      expect(HTMLAnchorElement.prototype.click).toHaveBeenCalled();
+    } finally {
+      HTMLAnchorElement.prototype.click = originalClick;
+    }
+  });
+
+  it('[REQ-UI-15] highlights the canvas as a drop target while files are dragged over the app', () => {
+    const { container } = renderApp();
+    const app = container.querySelector('.app-container')!;
+    const canvasArea = () => container.querySelector('.canvas-container')!;
+
+    expect(canvasArea()).not.toHaveClass('drop-active');
+    fireEvent.dragEnter(app);
+    expect(canvasArea()).toHaveClass('drop-active');
+    expect(screen.getByText(/Drop photos to add them/i)).toBeInTheDocument();
+
+    // Entering a child and leaving it again keeps the highlight; leaving the app clears it
+    fireEvent.dragEnter(canvasArea());
+    fireEvent.dragLeave(canvasArea());
+    expect(canvasArea()).toHaveClass('drop-active');
+    fireEvent.dragLeave(app);
+    expect(canvasArea()).not.toHaveClass('drop-active');
+    expect(screen.queryByText(/Drop photos to add them/i)).not.toBeInTheDocument();
   });
 });

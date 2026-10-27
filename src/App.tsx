@@ -7,15 +7,18 @@ import JSZip from 'jszip';
 import { v4 as uuidv4 } from 'uuid';
 import CanvasPreview from './CanvasPreview';
 import SidebarControls from './SidebarControls';
+import Notice from './controls/Notice';
 import { useFontLoader } from './useFontLoader';
 
 import piexif from 'piexifjs';
 
 function App() {
-  const { state, addImage, updateConfig, clearAllImages, setActiveImage, removeImage } = useStore();
+  const { state, addImage, updateConfig, clearAllImages, setActiveImage, removeImage, setNotice, setExportProgress } = useStore();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [isPreviewLoading, setIsPreviewLoading] = useState(false);
+  const [isDragging, setIsDragging] = useState(false);
+  const dragDepth = useRef(0);
   const previewDialogRef = useRef<HTMLDivElement>(null);
   const previewCloseRef = useRef<HTMLButtonElement>(null);
   const previewTriggerRef = useRef<HTMLElement | null>(null);
@@ -58,9 +61,13 @@ function App() {
 
   // [ARC-02] [REQ-EXIF-01] [REQ-EXIF-03] [REQ-EXIF-04] Client-side loading via the File API; each file gets EXIF extracted, then joins the queue
   const processFiles = async (files: FileList) => {
+    let skipped = 0;
     for (let i = 0; i < files.length; i++) {
       const file = files[i];
-      if (!file.type.startsWith('image/') && !file.name.match(/\.(jpe?g|png|webp|heic|heif|gif)$/i)) continue;
+      if (!file.type.startsWith('image/') && !file.name.match(/\.(jpe?g|png|webp|heic|heif|gif)$/i)) {
+        skipped++;
+        continue;
+      }
 
       let rawExifStr: string | null = null;
       if (file.type === 'image/jpeg' || file.type === 'image/jpg' || file.name.match(/\.jpe?g$/i)) {
@@ -95,7 +102,10 @@ function App() {
       });
 
       // [REQ-EXIF-05] Undecodable image: skip it and keep processing the rest of the queue
-      if (!isLoaded) continue;
+      if (!isLoaded) {
+        skipped++;
+        continue;
+      }
 
       addImage({
         id: uuidv4(),
@@ -105,6 +115,16 @@ function App() {
         height: tempImg.naturalHeight || tempImg.height,
         exif,
         rawExifStr,
+      });
+    }
+
+    // [REQ-UI-13] Tell the user how many files were skipped; the rest are already in the queue
+    if (skipped > 0) {
+      setNotice({
+        kind: 'info',
+        message: skipped === 1
+          ? 'Skipped 1 file that could not be read as an image.'
+          : `Skipped ${skipped} files that could not be read as images.`,
       });
     }
   };
@@ -118,6 +138,8 @@ function App() {
 
   const handleDrop = async (e: React.DragEvent) => {
     e.preventDefault();
+    dragDepth.current = 0;
+    setIsDragging(false);
     const files = e.dataTransfer.files;
     if (files && files.length > 0) {
       await processFiles(files);
@@ -126,6 +148,18 @@ function App() {
 
   const handleDragOver = (e: React.DragEvent) => {
     e.preventDefault();
+  };
+
+  // [REQ-UI-15] Track enter/leave depth so nested children do not flicker the highlight
+  const handleDragEnter = (e: React.DragEvent) => {
+    e.preventDefault();
+    dragDepth.current += 1;
+    setIsDragging(true);
+  };
+
+  const handleDragLeave = () => {
+    dragDepth.current = Math.max(0, dragDepth.current - 1);
+    if (dragDepth.current === 0) setIsDragging(false);
   };
 
   useEffect(() => {
@@ -145,50 +179,58 @@ function App() {
 
   // [ARC-02] [REQ-EXPT-02] [REQ-UI-06] Batch export: render every queued image sequentially into one ZIP
   const handleExportBatch = async () => {
-    if (state.images.length === 0) return;
+    if (state.images.length === 0 || state.exportProgress) return;
 
-    // Create an offscreen canvas
-    const canvas = document.createElement('canvas');
-    const zip = new JSZip();
+    // [REQ-UI-14] Publish progress so the export controls can show it and lock while the ZIP builds
+    const total = state.images.length;
+    setExportProgress({ done: 0, total });
+    try {
+      // Create an offscreen canvas
+      const canvas = document.createElement('canvas');
+      const zip = new JSZip();
 
-    // Load logo if exists
-    let logoImg: HTMLImageElement | null = null;
-    if (state.config.logo.dataUrl) {
-      logoImg = new Image();
-      await new Promise((resolve) => {
-        logoImg!.onload = resolve;
-        logoImg!.src = state.config.logo.dataUrl!;
-      });
-    }
-
-    for (const image of state.images) {
-      const img = new Image();
-      await new Promise((resolve) => {
-        img.onload = resolve;
-        img.src = image.objectUrl;
-      });
-
-      // [REQ-EXPT-03] Longest-edge limit from export.maxResolution
-      let overrideMaxRes = Infinity;
-      if (state.config.export?.maxResolution === "4K") overrideMaxRes = 3840;
-      if (state.config.export?.maxResolution === "Facebook") overrideMaxRes = 2048;
-      if (state.config.export?.maxResolution === "Instagram") overrideMaxRes = 1350;
-
-      // Render to offscreen canvas
-      renderPhotoBorder(canvas, image, img, state.config, logoImg, overrideMaxRes);
-
-      const quality = (state.config.export?.quality ?? 100) / 100;
-      const blob = await exportImageWithExif(canvas, image, quality);
-      if (blob) {
-        zip.file(`Bordered-${image.file.name.replace(/\.[^/.]+$/, "")}.jpg`, blob);
+      // Load logo if exists
+      let logoImg: HTMLImageElement | null = null;
+      if (state.config.logo.dataUrl) {
+        logoImg = new Image();
+        await new Promise((resolve) => {
+          logoImg!.onload = resolve;
+          logoImg!.src = state.config.logo.dataUrl!;
+        });
       }
-    }
 
-    const content = await zip.generateAsync({ type: 'blob' });
-    const link = document.createElement('a');
-    link.href = URL.createObjectURL(content);
-    link.download = `Batch-Export.zip`;
-    link.click();
+      for (const [index, image] of state.images.entries()) {
+        setExportProgress({ done: index + 1, total });
+        const img = new Image();
+        await new Promise((resolve) => {
+          img.onload = resolve;
+          img.src = image.objectUrl;
+        });
+
+        // [REQ-EXPT-03] Longest-edge limit from export.maxResolution
+        let overrideMaxRes = Infinity;
+        if (state.config.export?.maxResolution === "4K") overrideMaxRes = 3840;
+        if (state.config.export?.maxResolution === "Facebook") overrideMaxRes = 2048;
+        if (state.config.export?.maxResolution === "Instagram") overrideMaxRes = 1350;
+
+        // Render to offscreen canvas
+        renderPhotoBorder(canvas, image, img, state.config, logoImg, overrideMaxRes);
+
+        const quality = (state.config.export?.quality ?? 100) / 100;
+        const blob = await exportImageWithExif(canvas, image, quality);
+        if (blob) {
+          zip.file(`Bordered-${image.file.name.replace(/\.[^/.]+$/, "")}.jpg`, blob);
+        }
+      }
+
+      const content = await zip.generateAsync({ type: 'blob' });
+      const link = document.createElement('a');
+      link.href = URL.createObjectURL(content);
+      link.download = `Batch-Export.zip`;
+      link.click();
+    } finally {
+      setExportProgress(null);
+    }
   };
 
   const handleExportSingle = async () => {
@@ -288,11 +330,16 @@ function App() {
     if (!file) return;
     const reader = new FileReader();
     reader.onload = (event) => {
+      // [REQ-UI-12] Reject anything that is not a configuration object and tell the user; current settings stay
       try {
-        const config = JSON.parse(event.target?.result as string);
-        updateConfig(() => config);
+        const parsed = JSON.parse(event.target?.result as string);
+        const looksLikeConfig = parsed && typeof parsed === 'object' && typeof parsed.layout === 'object' && Array.isArray(parsed.labels);
+        if (!looksLikeConfig) throw new Error('not a Borderify preset');
+        updateConfig(() => parsed);
+        setNotice(null);
       } catch (err) {
         console.error("Failed to load preset JSON", err);
+        setNotice({ kind: 'error', message: `Could not load "${file.name}" as a preset. Your current settings were kept.` });
       }
     };
     reader.readAsText(file);
@@ -305,6 +352,8 @@ function App() {
       className="app-container"
       onDrop={handleDrop}
       onDragOver={handleDragOver}
+      onDragEnter={handleDragEnter}
+      onDragLeave={handleDragLeave}
     >
       <div className="workspace">
         <header className="top-bar">
@@ -352,7 +401,16 @@ function App() {
           </div>
         </header>
 
-        <div className="canvas-container">
+        {state.notice && <Notice notice={state.notice} onDismiss={() => setNotice(null)} />}
+
+        {/* [REQ-UI-15] Highlighted drop target while files are dragged over the app */}
+        <div className={`canvas-container${isDragging ? ' drop-active' : ''}`}>
+          {isDragging && (
+            <div className="drop-overlay" aria-hidden="true">
+              <ImagePlus size={28} />
+              <span>Drop photos to add them</span>
+            </div>
+          )}
           {state.images.length === 0 ? (
             <div className="empty-state glass-panel" style={{ padding: '40px', borderRadius: '16px' }}>
               <img src="./favicon.svg" alt="Borderify Empty State" style={{ width: 100, height: 100 }} />

@@ -111,8 +111,22 @@ export interface AppConfig {
   export: ExportSettings;
 }
 
+/** A transient message shown above the canvas; `error` notices use role="alert". */
+export interface Notice {
+  kind: 'error' | 'info';
+  message: string;
+}
+
+/** Progress of a running batch export: `done` is the 1-based index of the image being rendered. */
+export interface ExportProgress {
+  done: number;
+  total: number;
+}
+
 export interface AppState {
   images: ImageItem[];
   activeImageId: string | null;
   config: AppConfig;
+  notice: Notice | null;
+  exportProgress: ExportProgress | null;
 }
