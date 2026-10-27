@@ -389,4 +389,42 @@ describe('App Layout and UI components', () => {
     expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
     expect(document.activeElement).toBe(previewBtn);
   });
+
+  it('[REQ-UI-16] requests a web font only after typing pauses and drops links for superseded names', () => {
+    vi.useFakeTimers();
+    try {
+      renderApp();
+      const fontLinks = () => Array.from(document.head.querySelectorAll('link[id^="dynamic-font-"]')).map(l => l.id);
+      // Settle the initial render: the default fonts are system fonts, so nothing is requested
+      act(() => { vi.advanceTimersByTime(600); });
+      expect(fontLinks()).toEqual([]);
+
+      const captionHeader = screen.getAllByRole('button').find(btn => btn.className.includes('accordion-header') && btn.textContent?.includes('Caption'))!;
+      fireEvent.click(captionHeader);
+      const fontInput = screen.getByLabelText('Font', { selector: 'input' });
+
+      // Three keystrokes within the delay produce no request
+      fireEvent.change(fontInput, { target: { value: 'Pla' } });
+      act(() => { vi.advanceTimersByTime(200); });
+      fireEvent.change(fontInput, { target: { value: 'Playfair' } });
+      act(() => { vi.advanceTimersByTime(200); });
+      fireEvent.change(fontInput, { target: { value: 'Playfair Display' } });
+      act(() => { vi.advanceTimersByTime(499); });
+      expect(fontLinks()).toEqual([]);
+
+      // Once typing pauses, exactly one link is added, for the final name only
+      act(() => { vi.advanceTimersByTime(1); });
+      expect(fontLinks()).toEqual(['dynamic-font-Playfair-Display']);
+      const href = document.getElementById('dynamic-font-Playfair-Display')!.getAttribute('href')!;
+      expect(href).toContain('fonts.googleapis.com');
+      expect(href).toContain('family=Playfair+Display');
+
+      // Switching to another font removes the superseded link
+      fireEvent.change(fontInput, { target: { value: 'Lato' } });
+      act(() => { vi.advanceTimersByTime(500); });
+      expect(fontLinks()).toEqual(['dynamic-font-Lato']);
+    } finally {
+      vi.useRealTimers();
+    }
+  });
 });

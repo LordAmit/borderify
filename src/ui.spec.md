@@ -18,3 +18,6 @@ This document contains the functional requirements for layouts, settings control
 *   **[REQ-UI-09]** The system shall give every icon-only button an accessible name and every queue thumbnail and export preview image alternative text.
 *   **[REQ-UI-10]** While the export preview overlay is open, the system shall present it as a modal dialog that receives keyboard focus, keeps Tab focus inside it, closes on Escape, and returns focus to the control that opened it.
 *   **[REQ-UI-11]** The system shall expose the expanded or collapsed state of each collapsible settings section through `aria-expanded` and show a visible focus ring on every focusable control.
+
+### Unwanted Behavior
+*   **[REQ-UI-16]** If a web font family name is still being typed, then the system shall request the font stylesheet only after 500 ms without further input and shall remove stylesheet links for names that were superseded before that delay elapsed.

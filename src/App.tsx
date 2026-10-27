@@ -1,4 +1,4 @@
-import React, { useRef, useEffect, useState } from 'react';
+import React, { useRef, useEffect, useState, useCallback } from 'react';
 import { Upload, Trash2, Download, X, ImagePlus } from 'lucide-react';
 import { useStore } from './store';
 import { extractExif, exportImageWithExif } from './exif';
@@ -7,6 +7,7 @@ import JSZip from 'jszip';
 import { v4 as uuidv4 } from 'uuid';
 import CanvasPreview from './CanvasPreview';
 import SidebarControls from './SidebarControls';
+import { useFontLoader } from './useFontLoader';
 
 import piexif from 'piexifjs';
 
@@ -51,87 +52,9 @@ function App() {
     };
   }, [previewUrl]);
 
-  // Dynamically load fonts from Google Fonts for seamless usage
-  useEffect(() => {
-    const fontsToLoad = new Set<string>();
-
-    // Check Label fonts
-    state.config.labels.forEach(label => {
-      // If it contains a raw base64 custom font, inject it natively instead of via Google Fonts
-      if (label.customFontDataUrl) {
-        const linkId = `custom-local-font-${label.fontFamily.replace(/\s+/g, '-')}`;
-        if (!document.getElementById(linkId)) {
-          const style = document.createElement('style');
-          style.id = linkId;
-          style.innerHTML = `
-            @font-face {
-              font-family: '${label.fontFamily}';
-              src: url('${label.customFontDataUrl}');
-            }
-          `;
-          document.head.appendChild(style);
-          if ('fonts' in document) {
-            document.fonts.load(`16px "${label.fontFamily}"`).then(() => updateConfig(c => ({ ...c })));
-          }
-        }
-      } else if (label.fontFamily && !label.fontFamily.includes('sans-serif')) {
-        fontsToLoad.add(label.fontFamily.replace(/"/g, '').trim());
-      }
-    });
-
-    // Check individual image style overrides for custom fonts
-    state.images.forEach(img => {
-      if (img.captionStyle) {
-        const style = img.captionStyle;
-        if (style.customFontDataUrl && style.fontFamily) {
-          const linkId = `custom-local-font-${style.fontFamily.replace(/\s+/g, '-')}`;
-          if (!document.getElementById(linkId)) {
-            const styleEl = document.createElement('style');
-            styleEl.id = linkId;
-            styleEl.innerHTML = `
-              @font-face {
-                font-family: '${style.fontFamily}';
-                src: url('${style.customFontDataUrl}');
-              }
-            `;
-            document.head.appendChild(styleEl);
-            if ('fonts' in document) {
-              document.fonts.load(`16px "${style.fontFamily}"`).then(() => updateConfig(c => ({ ...c })));
-            }
-          }
-        } else if (style.fontFamily && !style.fontFamily.includes('sans-serif')) {
-          fontsToLoad.add(style.fontFamily.replace(/"/g, '').trim());
-        }
-      }
-    });
-
-    // Check EXIF fonts
-    if (state.config.exifPills.fontFamily && !state.config.exifPills.fontFamily.includes('sans-serif')) {
-      fontsToLoad.add(state.config.exifPills.fontFamily.replace(/"/g, '').trim());
-    }
-
-    fontsToLoad.forEach(font => {
-      const linkId = `dynamic-font-${font.replace(/\s+/g, '-')}`;
-      if (!document.getElementById(linkId)) {
-        const link = document.createElement('link');
-        link.id = linkId;
-        link.rel = 'stylesheet';
-        link.href = `https://fonts.googleapis.com/css2?family=${font.replace(/\s+/g, '+')}:wght@400;600&display=swap`;
-
-        // When loaded, trigger a state update just to re-render the canvas
-        link.onload = () => {
-          updateConfig(c => ({ ...c }));
-        };
-
-        document.head.appendChild(link);
-
-        // Also force Document.fonts to be ready if it's local but needs to be parsed
-        if ('fonts' in document) {
-          document.fonts.load(`16px "${font}"`).catch(() => { });
-        }
-      }
-    });
-  }, [state.config.labels, state.config.exifPills.fontFamily, state.images, updateConfig]);
+  // Re-render the canvas once a font has finished loading
+  const refreshPreview = useCallback(() => updateConfig(c => ({ ...c })), [updateConfig]);
+  useFontLoader(state.config, state.images, refreshPreview);
 
   // [ARC-02] [REQ-EXIF-01] [REQ-EXIF-03] [REQ-EXIF-04] Client-side loading via the File API; each file gets EXIF extracted, then joins the queue
   const processFiles = async (files: FileList) => {
